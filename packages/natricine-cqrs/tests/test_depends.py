@@ -1,5 +1,7 @@
 """Tests for dependency injection."""
 
+from typing import Annotated
+
 import pytest
 
 from natricine_cqrs import Depends
@@ -19,7 +21,7 @@ class TestDepends:
         def get_value() -> int:
             return DEP_VALUE_42
 
-        async def handler(x: int = Depends(get_value)) -> int:
+        async def handler(x: Annotated[int, Depends(get_value)]) -> int:
             return x
 
         resolved = await resolve_dependencies(handler, {})
@@ -29,7 +31,7 @@ class TestDepends:
         async def get_value() -> str:
             return "async_value"
 
-        async def handler(x: str = Depends(get_value)) -> str:
+        async def handler(x: Annotated[str, Depends(get_value)]) -> str:
             return x
 
         resolved = await resolve_dependencies(handler, {})
@@ -39,10 +41,10 @@ class TestDepends:
         def get_base() -> int:
             return DEP_VALUE_10
 
-        def get_derived(base: int = Depends(get_base)) -> int:
+        def get_derived(base: Annotated[int, Depends(get_base)]) -> int:
             return base * 2
 
-        async def handler(value: int = Depends(get_derived)) -> int:
+        async def handler(value: Annotated[int, Depends(get_derived)]) -> int:
             return value
 
         resolved = await resolve_dependencies(handler, {})
@@ -52,7 +54,7 @@ class TestDepends:
         def get_value() -> int:
             return DEP_VALUE_42
 
-        async def handler(cmd: str, x: int = Depends(get_value)) -> None:
+        async def handler(cmd: str, x: Annotated[int, Depends(get_value)]) -> None:
             pass
 
         resolved = await resolve_dependencies(handler, {"cmd": "my_command"})
@@ -65,7 +67,7 @@ class TestCallWithDeps:
         def get_dep() -> int:
             return 5
 
-        def add(a: int, b: int = Depends(get_dep)) -> int:
+        def add(a: int, b: Annotated[int, Depends(get_dep)]) -> int:
             return a + b
 
         result = await call_with_deps(add, {"a": 10})
@@ -75,7 +77,7 @@ class TestCallWithDeps:
         async def get_dep() -> int:
             return 7
 
-        async def multiply(a: int, b: int = Depends(get_dep)) -> int:
+        async def multiply(a: int, b: Annotated[int, Depends(get_dep)]) -> int:
             return a * b
 
         result = await call_with_deps(multiply, {"a": 3})
@@ -89,7 +91,9 @@ class TestCallWithDeps:
             return 3
 
         async def compute(
-            a: int, x: int = Depends(get_x), y: int = Depends(get_y)
+            a: int,
+            x: Annotated[int, Depends(get_x)],
+            y: Annotated[int, Depends(get_y)],
         ) -> int:
             return a + x + y
 

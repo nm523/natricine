@@ -3,7 +3,7 @@
 import inspect
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Annotated, Any, TypeVar, get_args, get_origin, get_type_hints
 
 T = TypeVar("T")
 
@@ -12,16 +12,28 @@ T = TypeVar("T")
 class Depends:
     """Marker for dependency injection in handler signatures.
 
-    Usage:
+    Usage with Annotated (preferred):
         async def get_database() -> Database:
             return Database()
 
         @command_bus.handler
-        async def handle_cmd(cmd: MyCommand, db: Database = Depends(get_database)):
+        async def handle_cmd(
+            cmd: MyCommand,
+            db: Annotated[Database, Depends(get_database)],
+        ) -> None:
             await db.save(cmd)
     """
 
     dependency: Callable[..., Any]
+
+
+def _get_depends_from_annotation(annotation: Any) -> Depends | None:
+    """Extract Depends from an Annotated type hint."""
+    if get_origin(annotation) is Annotated:
+        for arg in get_args(annotation)[1:]:
+            if isinstance(arg, Depends):
+                return arg
+    return None
 
 
 async def resolve_dependencies(
@@ -29,6 +41,10 @@ async def resolve_dependencies(
     provided: dict[str, Any],
 ) -> dict[str, Any]:
     """Resolve Depends parameters in a function signature.
+
+    Supports both:
+    - Annotated[T, Depends(...)] (preferred)
+    - param: T = Depends(...) (legacy, but works at runtime)
 
     Args:
         func: The function whose signature to inspect.
@@ -40,12 +56,27 @@ async def resolve_dependencies(
     sig = inspect.signature(func)
     resolved: dict[str, Any] = dict(provided)
 
+    # Get type hints for Annotated support
+    try:
+        hints = get_type_hints(func, include_extras=True)
+    except Exception:
+        hints = {}
+
     for name, param in sig.parameters.items():
         if name in resolved:
             continue
 
-        if isinstance(param.default, Depends):
-            dep_func = param.default.dependency
+        # Check for Annotated[T, Depends(...)]
+        depends: Depends | None = None
+        if name in hints:
+            depends = _get_depends_from_annotation(hints[name])
+
+        # Fall back to default value pattern
+        if depends is None and isinstance(param.default, Depends):
+            depends = param.default
+
+        if depends is not None:
+            dep_func = depends.dependency
             # Recursively resolve dependencies of the dependency
             nested = await resolve_dependencies(dep_func, {})
             result = dep_func(**nested)

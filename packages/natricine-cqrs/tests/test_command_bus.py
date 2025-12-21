@@ -1,5 +1,7 @@
 """Tests for CommandBus."""
 
+from typing import Annotated
+
 import anyio
 import pytest
 from pydantic import BaseModel
@@ -88,7 +90,8 @@ class TestCommandBus:
 
             @bus.handler
             async def handle_create(
-                cmd: CreateUser, service: str = Depends(get_service)
+                cmd: CreateUser,
+                service: Annotated[str, Depends(get_service)],
             ) -> None:
                 results.append((cmd, service))
 

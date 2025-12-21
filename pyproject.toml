@@ -13,7 +13,7 @@ natricine-router = { workspace = true }
 natricine-cqrs = { workspace = true }
 
 [dependency-groups]
-dev = ["pytest>=8.0", "pytest-anyio>=0.0.0", "ruff>=0.8", "pydantic>=2.0"]
+dev = ["pytest>=8.0", "pytest-anyio>=0.0.0", "ruff>=0.8", "pydantic>=2.0", "ty>=0.0.1a6"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "PLC0415", "PLR2004"]

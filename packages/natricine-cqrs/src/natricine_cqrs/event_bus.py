@@ -2,7 +2,7 @@
 
 import inspect
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar, get_type_hints
+from typing import Any, ParamSpec, get_type_hints
 
 import anyio
 
@@ -10,9 +10,7 @@ from natricine_cqrs.depends import call_with_deps
 from natricine_cqrs.marshaler import Marshaler
 from natricine_pubsub import Message, Publisher, Subscriber
 
-E = TypeVar("E")
-
-EventHandler = Callable[..., Awaitable[None]]
+P = ParamSpec("P")
 
 
 class EventBus:
@@ -32,11 +30,13 @@ class EventBus:
         self._subscriber = subscriber
         self._marshaler = marshaler
         self._topic_prefix = topic_prefix
-        self._handlers: dict[type, list[EventHandler]] = {}
+        self._handlers: dict[type, list[Callable[..., Awaitable[None]]]] = {}
         self._running = False
         self._cancel_scope: anyio.CancelScope | None = None
 
-    def handler(self, func: EventHandler) -> EventHandler:
+    def handler(
+        self, func: Callable[P, Awaitable[None]]
+    ) -> Callable[P, Awaitable[None]]:
         """Decorator to register an event handler.
 
         The event type is inferred from the first parameter's type hint.
@@ -50,13 +50,15 @@ class EventBus:
         hints = get_type_hints(func)
         params = list(inspect.signature(func).parameters.keys())
 
+        func_name = getattr(func, "__name__", repr(func))
+
         if not params:
-            msg = f"Handler {func.__name__} must have at least one parameter"
+            msg = f"Handler {func_name} must have at least one parameter"
             raise TypeError(msg)
 
         first_param = params[0]
         if first_param not in hints:
-            msg = f"First parameter '{first_param}' of {func.__name__} must be typed"
+            msg = f"First parameter '{first_param}' of {func_name} must be typed"
             raise TypeError(msg)
 
         event_type = hints[first_param]
@@ -95,7 +97,7 @@ class EventBus:
         self,
         topic: str,
         event_type: type,
-        handler: EventHandler,
+        handler: Callable[..., Awaitable[None]],
     ) -> None:
         """Process events for a single handler."""
         async for msg in self._subscriber.subscribe(topic):

@@ -1,4 +1,4 @@
-.PHONY: test lint check sync
+.PHONY: test lint typecheck check sync
 
 sync:
 	uv sync
@@ -9,4 +9,7 @@ test:
 lint:
 	uv run ruff check packages/
 
-check: lint test
+typecheck:
+	uv run ty check packages/
+
+check: lint typecheck test

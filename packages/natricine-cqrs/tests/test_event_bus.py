@@ -1,5 +1,7 @@
 """Tests for EventBus."""
 
+from typing import Annotated
+
 import anyio
 import pytest
 from pydantic import BaseModel
@@ -82,7 +84,8 @@ class TestEventBus:
 
             @bus.handler
             async def on_user_created(
-                event: UserCreated, notifier: str = Depends(get_notifier)
+                event: UserCreated,
+                notifier: Annotated[str, Depends(get_notifier)],
             ) -> None:
                 results.append((event, notifier))
 
