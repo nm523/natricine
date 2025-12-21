@@ -3,8 +3,8 @@
 import anyio
 import pytest
 
-from natricine_pubsub import Message
-from natricine_router import retry, timeout
+from natricine.pubsub import Message
+from natricine.router import retry, timeout
 
 pytestmark = pytest.mark.anyio
 

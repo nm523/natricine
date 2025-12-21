@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass, field
 
-from natricine_pubsub import Publisher, Subscriber
-from natricine_router.types import HandlerFunc, Middleware
+from natricine.pubsub import Publisher, Subscriber
+from natricine.router.types import HandlerFunc, Middleware
 
 
 @dataclass

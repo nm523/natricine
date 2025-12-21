@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 
-from natricine_pubsub import Message
+from natricine.pubsub import Message
 
 # Handler that may produce output messages
 HandlerFunc = Callable[[Message], Awaitable[list[Message] | None]]

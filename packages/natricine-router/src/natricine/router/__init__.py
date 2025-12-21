@@ -1,8 +1,8 @@
 """natricine-router: Message routing layer."""
 
-from natricine_router.middleware import recoverer, retry, timeout
-from natricine_router.router import Router, RouterConfig
-from natricine_router.types import HandlerFunc, Middleware, NoPublishHandlerFunc
+from natricine.router.middleware import recoverer, retry, timeout
+from natricine.router.router import Router, RouterConfig
+from natricine.router.types import HandlerFunc, Middleware, NoPublishHandlerFunc
 
 __all__ = [
     "HandlerFunc",

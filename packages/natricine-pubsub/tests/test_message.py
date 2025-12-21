@@ -2,7 +2,7 @@
 
 import pytest
 
-from natricine_pubsub import Message
+from natricine.pubsub import Message
 
 pytestmark = pytest.mark.anyio
 

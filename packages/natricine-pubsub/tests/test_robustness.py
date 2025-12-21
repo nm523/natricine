@@ -3,7 +3,7 @@
 import anyio
 import pytest
 
-from natricine_pubsub import InMemoryPubSub, Message
+from natricine.pubsub import InMemoryPubSub, Message
 
 pytestmark = pytest.mark.anyio
 

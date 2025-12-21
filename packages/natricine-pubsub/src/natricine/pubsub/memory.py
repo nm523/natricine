@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 
-from natricine_pubsub.message import Message
+from natricine.pubsub.message import Message
 
 
 @dataclass

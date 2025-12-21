@@ -3,8 +3,8 @@
 import anyio
 import pytest
 
-from natricine_pubsub import InMemoryPubSub, Message
-from natricine_router import Router
+from natricine.pubsub import InMemoryPubSub, Message
+from natricine.router import Router
 
 pytestmark = pytest.mark.anyio
 

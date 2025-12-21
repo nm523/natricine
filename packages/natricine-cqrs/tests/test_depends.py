@@ -4,8 +4,8 @@ from typing import Annotated
 
 import pytest
 
-from natricine_cqrs import Depends
-from natricine_cqrs.depends import call_with_deps, resolve_dependencies
+from natricine.cqrs import Depends
+from natricine.cqrs.depends import call_with_deps, resolve_dependencies
 
 pytestmark = pytest.mark.anyio
 

@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel
 
-from natricine_cqrs import PydanticMarshaler
+from natricine.cqrs import PydanticMarshaler
 
 TEST_USER_ID = 456
 

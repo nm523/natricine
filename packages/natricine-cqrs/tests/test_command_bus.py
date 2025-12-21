@@ -6,8 +6,8 @@ import anyio
 import pytest
 from pydantic import BaseModel
 
-from natricine_cqrs import CommandBus, Depends, PydanticMarshaler
-from natricine_pubsub import InMemoryPubSub
+from natricine.cqrs import CommandBus, Depends, PydanticMarshaler
+from natricine.pubsub import InMemoryPubSub
 
 pytestmark = pytest.mark.anyio
 

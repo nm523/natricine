@@ -4,8 +4,8 @@ import logging
 
 import anyio
 
-from natricine_pubsub import Message
-from natricine_router.types import HandlerFunc, Middleware
+from natricine.pubsub import Message
+from natricine.router.types import HandlerFunc, Middleware
 
 DEFAULT_MAX_RETRIES = 3
 DEFAULT_RETRY_DELAY = 1.0

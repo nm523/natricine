@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterator
 from typing import Protocol, runtime_checkable
 
-from natricine_pubsub.message import Message
+from natricine.pubsub.message import Message
 
 
 @runtime_checkable

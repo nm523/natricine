@@ -5,9 +5,9 @@ from dataclasses import dataclass
 import anyio
 from anyio import CancelScope
 
-from natricine_pubsub import Message, Publisher, Subscriber
-from natricine_router.handler import Handler
-from natricine_router.types import HandlerFunc, Middleware, NoPublishHandlerFunc
+from natricine.pubsub import Message, Publisher, Subscriber
+from natricine.router.handler import Handler
+from natricine.router.types import HandlerFunc, Middleware, NoPublishHandlerFunc
 
 
 @dataclass

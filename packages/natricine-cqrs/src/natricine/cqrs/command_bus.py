@@ -1,4 +1,4 @@
-"""EventBus - dispatches events to multiple handlers."""
+"""CommandBus - dispatches commands to their single handler."""
 
 import inspect
 from collections.abc import Awaitable, Callable
@@ -6,17 +6,17 @@ from typing import Any, ParamSpec, get_type_hints
 
 import anyio
 
-from natricine_cqrs.depends import call_with_deps
-from natricine_cqrs.marshaler import Marshaler
-from natricine_pubsub import Message, Publisher, Subscriber
+from natricine.cqrs.depends import call_with_deps
+from natricine.cqrs.marshaler import Marshaler
+from natricine.pubsub import Message, Publisher, Subscriber
 
 P = ParamSpec("P")
 
 
-class EventBus:
-    """Dispatches events to their handlers.
+class CommandBus:
+    """Dispatches commands to their handlers.
 
-    Each event type can have multiple handlers.
+    Each command type has exactly one handler.
     """
 
     def __init__(
@@ -24,27 +24,26 @@ class EventBus:
         publisher: Publisher,
         subscriber: Subscriber,
         marshaler: Marshaler,
-        topic_prefix: str = "event.",
+        topic_prefix: str = "command.",
     ) -> None:
         self._publisher = publisher
         self._subscriber = subscriber
         self._marshaler = marshaler
         self._topic_prefix = topic_prefix
-        self._handlers: dict[type, list[Callable[..., Awaitable[None]]]] = {}
+        self._handlers: dict[type, Callable[..., Awaitable[None]]] = {}
         self._running = False
         self._cancel_scope: anyio.CancelScope | None = None
 
     def handler(
         self, func: Callable[P, Awaitable[None]]
     ) -> Callable[P, Awaitable[None]]:
-        """Decorator to register an event handler.
+        """Decorator to register a command handler.
 
-        The event type is inferred from the first parameter's type hint.
-        Multiple handlers can be registered for the same event type.
+        The command type is inferred from the first parameter's type hint.
 
         Usage:
-            @event_bus.handler
-            async def on_user_created(event: UserCreated) -> None:
+            @command_bus.handler
+            async def handle_create_user(cmd: CreateUser) -> None:
                 ...
         """
         hints = get_type_hints(func)
@@ -61,34 +60,30 @@ class EventBus:
             msg = f"First parameter '{first_param}' of {func_name} must be typed"
             raise TypeError(msg)
 
-        event_type = hints[first_param]
-        if event_type not in self._handlers:
-            self._handlers[event_type] = []
-        self._handlers[event_type].append(func)
+        command_type = hints[first_param]
+        self._handlers[command_type] = func
         return func
 
-    async def publish(self, event: Any) -> None:
-        """Publish an event to all registered handlers."""
-        event_type = type(event)
-        topic = self._topic_prefix + self._marshaler.name(event_type)
-        payload = self._marshaler.marshal(event)
+    async def send(self, command: Any) -> None:
+        """Send a command to be handled."""
+        command_type = type(command)
+        topic = self._topic_prefix + self._marshaler.name(command_type)
+        payload = self._marshaler.marshal(command)
         await self._publisher.publish(topic, Message(payload=payload))
 
     async def run(self) -> None:
-        """Run the event bus, processing events until closed."""
+        """Run the command bus, processing commands until closed."""
         if self._running:
-            msg = "EventBus is already running"
+            msg = "CommandBus is already running"
             raise RuntimeError(msg)
 
         self._running = True
         try:
             async with anyio.create_task_group() as tg:
                 self._cancel_scope = tg.cancel_scope
-                # Each handler gets its own subscription
-                for event_type, handlers in self._handlers.items():
-                    topic = self._topic_prefix + self._marshaler.name(event_type)
-                    for handler in handlers:
-                        tg.start_soon(self._run_handler, topic, event_type, handler)
+                for command_type, handler in self._handlers.items():
+                    topic = self._topic_prefix + self._marshaler.name(command_type)
+                    tg.start_soon(self._run_handler, topic, command_type, handler)
         finally:
             self._running = False
             self._cancel_scope = None
@@ -96,21 +91,21 @@ class EventBus:
     async def _run_handler(
         self,
         topic: str,
-        event_type: type,
+        command_type: type,
         handler: Callable[..., Awaitable[None]],
     ) -> None:
-        """Process events for a single handler."""
+        """Process commands for a single handler."""
         async for msg in self._subscriber.subscribe(topic):
             try:
-                event = self._marshaler.unmarshal(msg.payload, event_type)
-                await call_with_deps(handler, {_first_param_name(handler): event})
+                command = self._marshaler.unmarshal(msg.payload, command_type)
+                await call_with_deps(handler, {_first_param_name(handler): command})
                 await msg.ack()
             except Exception:
                 await msg.nack()
                 raise
 
     async def close(self) -> None:
-        """Stop the event bus."""
+        """Stop the command bus."""
         if self._cancel_scope:
             self._cancel_scope.cancel()
 
