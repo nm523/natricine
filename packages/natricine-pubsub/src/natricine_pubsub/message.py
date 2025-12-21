@@ -51,3 +51,11 @@ class Message:
     @property
     def nacked(self) -> bool:
         return self._nacked
+
+    def copy(self) -> "Message":
+        """Create a copy with same uuid/payload/metadata but fresh ack state."""
+        return Message(
+            payload=self.payload,
+            metadata=self.metadata.copy(),
+            uuid=self.uuid,
+        )

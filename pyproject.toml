@@ -2,13 +2,14 @@
 name = "natricine"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["natricine-pubsub"]
+dependencies = ["natricine-pubsub", "natricine-router"]
 
 [tool.uv.workspace]
 members = ["packages/*"]
 
 [tool.uv.sources]
 natricine-pubsub = { workspace = true }
+natricine-router = { workspace = true }
 
 [dependency-groups]
 dev = ["pytest>=8.0", "pytest-anyio>=0.0.0", "ruff>=0.8"]
@@ -17,7 +18,7 @@ dev = ["pytest>=8.0", "pytest-anyio>=0.0.0", "ruff>=0.8"]
 select = ["E", "W", "F", "I", "PLC0415", "PLR2004"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["natricine_pubsub"]
+known-first-party = ["natricine_pubsub", "natricine_router"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages/*/tests"]

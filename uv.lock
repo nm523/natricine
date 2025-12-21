@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 members = [
     "natricine",
     "natricine-pubsub",
+    "natricine-router",
 ]
 
 [[package]]
@@ -54,6 +55,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "natricine-pubsub" },
+    { name = "natricine-router" },
 ]
 
 [package.dev-dependencies]
@@ -64,7 +66,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "natricine-pubsub", editable = "packages/natricine-pubsub" }]
+requires-dist = [
+    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+    { name = "natricine-router", editable = "packages/natricine-router" },
+]
 
 [package.metadata.requires-dev]
 dev = [
@@ -83,6 +88,21 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "anyio", specifier = ">=4.0" }]
+
+[[package]]
+name = "natricine-router"
+version = "0.1.0"
+source = { editable = "packages/natricine-router" }
+dependencies = [
+    { name = "anyio" },
+    { name = "natricine-pubsub" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "anyio", specifier = ">=4.0" },
+    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+]
 
 [[package]]
 name = "packaging"

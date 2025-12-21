@@ -35,7 +35,8 @@ class InMemoryPubSub:
 
         for message in messages:
             for send_stream in state.subscribers:
-                await send_stream.send(message)
+                # Each subscriber gets its own copy for independent ack/nack
+                await send_stream.send(message.copy())
 
     def subscribe(self, topic: str) -> AsyncIterator[Message]:
         if self._closed:
