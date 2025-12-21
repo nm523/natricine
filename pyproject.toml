@@ -1,8 +1,13 @@
 [project]
 name = "natricine"
 version = "0.1.0"
+description = "Event-driven architecture toolkit for Python"
 requires-python = ">=3.11"
 dependencies = ["natricine-pubsub", "natricine-router", "natricine-cqrs"]
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
 
 [tool.uv.workspace]
 members = ["packages/*"]
@@ -11,15 +16,24 @@ members = ["packages/*"]
 natricine-pubsub = { workspace = true }
 natricine-router = { workspace = true }
 natricine-cqrs = { workspace = true }
+natricine-redisstream = { workspace = true }
 
 [dependency-groups]
-dev = ["pytest>=8.0", "pytest-anyio>=0.0.0", "ruff>=0.8", "pydantic>=2.0", "ty>=0.0.1a6"]
+dev = [
+    "pytest>=8.0",
+    "pytest-anyio>=0.0.0",
+    "ruff>=0.8",
+    "pydantic>=2.0",
+    "ty>=0.0.1a6",
+    # Backend implementations for testing
+    "natricine-redisstream",
+]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "PLC0415", "PLR2004"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["natricine_pubsub", "natricine_router", "natricine_cqrs"]
+known-first-party = ["natricine_pubsub", "natricine_router", "natricine_cqrs", "natricine_redisstream"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages/*/tests"]

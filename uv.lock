@@ -72,7 +72,7 @@ wheels = [
 [[package]]
 name = "natricine"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "natricine-cqrs" },
     { name = "natricine-pubsub" },
@@ -81,6 +81,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "natricine-redisstream" },
     { name = "pydantic" },
     { name = "pytest" },
     { name = "pytest-anyio" },
@@ -97,6 +98,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "natricine-redisstream", editable = "packages/natricine-redisstream" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-anyio", specifier = ">=0.0.0" },
@@ -111,7 +113,6 @@ source = { editable = "packages/natricine-cqrs" }
 dependencies = [
     { name = "anyio" },
     { name = "natricine-pubsub" },
-    { name = "natricine-router" },
 ]
 
 [package.optional-dependencies]
@@ -123,7 +124,6 @@ pydantic = [
 requires-dist = [
     { name = "anyio", specifier = ">=4.0" },
     { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
-    { name = "natricine-router", editable = "packages/natricine-router" },
     { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.0" },
 ]
 provides-extras = ["pydantic"]

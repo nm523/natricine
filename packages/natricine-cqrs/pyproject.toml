@@ -2,7 +2,7 @@
 name = "natricine-cqrs"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["natricine-pubsub", "natricine-router", "anyio>=4.0"]
+dependencies = ["natricine-pubsub", "anyio>=4.0"]
 
 [project.optional-dependencies]
 pydantic = ["pydantic>=2.0"]
