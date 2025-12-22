@@ -1,16 +1,36 @@
 """Dependency injection inspired by FastAPI's Depends."""
 
+import asyncio
 import inspect
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Annotated, Any, TypeVar, get_args, get_origin, get_type_hints
+from functools import partial
+from typing import (
+    Annotated,
+    Any,
+    Generic,
+    ParamSpec,
+    TypeVar,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    overload,
+)
 
-T = TypeVar("T")
+import anyio
+
+P = ParamSpec("P")
+R = TypeVar("R")
+T_co = TypeVar("T_co", covariant=True)
 
 
 @dataclass(frozen=True)
-class Depends:
+class Depends(Generic[T_co]):
     """Marker for dependency injection in handler signatures.
+
+    Generic over the return type of the dependency function, enabling
+    type checkers to verify that the dependency returns the expected type.
 
     Usage with Annotated (preferred):
         async def get_database() -> Database:
@@ -22,9 +42,12 @@ class Depends:
             db: Annotated[Database, Depends(get_database)],
         ) -> None:
             await db.save(cmd)
+
+    The type parameter is inferred from the dependency function's return type,
+    allowing type checkers to verify consistency with the Annotated type.
     """
 
-    dependency: Callable[..., Any]
+    dependency: Callable[..., T_co | Awaitable[T_co]]
 
 
 def _get_depends_from_annotation(annotation: Any) -> Depends | None:
@@ -79,33 +102,58 @@ async def resolve_dependencies(
             dep_func = depends.dependency
             # Recursively resolve dependencies of the dependency
             nested = await resolve_dependencies(dep_func, {})
-            result = dep_func(**nested)
 
-            if inspect.isawaitable(result):
-                result = await result
+            if asyncio.iscoroutinefunction(dep_func):
+                result = await dep_func(**nested)
+            else:
+                # Run sync dependencies in threadpool to avoid blocking
+                result = await anyio.to_thread.run_sync(  # type: ignore[unresolved-attribute]
+                    partial(dep_func, **nested)
+                )
 
             resolved[name] = result
 
     return resolved
 
 
+@overload
 async def call_with_deps(
-    func: Callable[..., T | Awaitable[T]],
+    func: Callable[P, Awaitable[R]],
     provided: dict[str, Any],
-) -> T:
+) -> R: ...
+
+
+@overload
+async def call_with_deps(
+    func: Callable[P, R],
+    provided: dict[str, Any],
+) -> R: ...
+
+
+async def call_with_deps(
+    func: Callable[P, R] | Callable[P, Awaitable[R]],
+    provided: dict[str, Any],
+) -> R:
     """Call a function, resolving any Depends parameters.
 
+    Sync functions are dispatched to a threadpool to avoid blocking
+    the event loop, similar to FastAPI's behavior.
+
     Args:
-        func: The function to call.
+        func: The function to call (sync or async).
         provided: Already-provided arguments.
 
     Returns:
         The result of calling the function.
     """
     resolved = await resolve_dependencies(func, provided)
-    result = func(**resolved)
 
-    if inspect.isawaitable(result):
-        return await result  # type: ignore[return-value]
+    if asyncio.iscoroutinefunction(func):
+        async_func = cast(Callable[P, Awaitable[R]], func)
+        return await async_func(**resolved)
 
-    return result  # type: ignore[return-value]
+    # Run sync functions in threadpool to avoid blocking event loop
+    sync_func = cast(Callable[P, R], func)
+    return await anyio.to_thread.run_sync(  # type: ignore[unresolved-attribute]
+        partial(sync_func, **resolved)
+    )

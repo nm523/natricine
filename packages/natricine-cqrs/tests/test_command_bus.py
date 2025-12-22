@@ -110,6 +110,61 @@ class TestCommandBus:
             assert results[0][0].name == "Test"
             assert results[0][1] == "injected_service"
 
+    async def test_sync_handler(self) -> None:
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+            bus = CommandBus(pubsub, pubsub, marshaler)
+            received: list[CreateUser] = []
+
+            @bus.handler
+            def handle_create_sync(cmd: CreateUser) -> None:
+                received.append(cmd)
+
+            async def send_command() -> None:
+                await anyio.sleep(0.01)
+                await bus.send(CreateUser(user_id=1, name="Sync"))
+                await anyio.sleep(0.02)
+                await bus.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(bus.run)
+                    tg.start_soon(send_command)
+
+            assert len(received) == 1
+            assert received[0].name == "Sync"
+
+    async def test_sync_handler_with_depends(self) -> None:
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+            bus = CommandBus(pubsub, pubsub, marshaler)
+            results: list[tuple[CreateUser, str]] = []
+
+            def get_service() -> str:
+                return "sync_service"
+
+            @bus.handler
+            def handle_create_sync(
+                cmd: CreateUser,
+                service: Annotated[str, Depends(get_service)],
+            ) -> None:
+                results.append((cmd, service))
+
+            async def send_command() -> None:
+                await anyio.sleep(0.01)
+                await bus.send(CreateUser(user_id=1, name="SyncDI"))
+                await anyio.sleep(0.02)
+                await bus.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(bus.run)
+                    tg.start_soon(send_command)
+
+            assert len(results) == 1
+            assert results[0][0].name == "SyncDI"
+            assert results[0][1] == "sync_service"
+
     async def test_handler_without_type_hint_raises(self) -> None:
         async with InMemoryPubSub() as pubsub:
             marshaler = PydanticMarshaler()

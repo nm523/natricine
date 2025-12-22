@@ -103,3 +103,58 @@ class TestEventBus:
             assert len(results) == 1
             assert results[0][0].name == "Test"
             assert results[0][1] == "email_notifier"
+
+    async def test_sync_handler(self) -> None:
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+            bus = EventBus(pubsub, pubsub, marshaler)
+            received: list[UserCreated] = []
+
+            @bus.handler
+            def on_user_created_sync(event: UserCreated) -> None:
+                received.append(event)
+
+            async def publish_event() -> None:
+                await anyio.sleep(0.01)
+                await bus.publish(UserCreated(user_id=1, name="Sync"))
+                await anyio.sleep(0.02)
+                await bus.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(bus.run)
+                    tg.start_soon(publish_event)
+
+            assert len(received) == 1
+            assert received[0].name == "Sync"
+
+    async def test_mixed_sync_async_handlers(self) -> None:
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+            bus = EventBus(pubsub, pubsub, marshaler)
+            sync_received: list[UserCreated] = []
+            async_received: list[UserCreated] = []
+
+            @bus.handler
+            def sync_handler(event: UserCreated) -> None:
+                sync_received.append(event)
+
+            @bus.handler
+            async def async_handler(event: UserCreated) -> None:
+                async_received.append(event)
+
+            async def publish_event() -> None:
+                await anyio.sleep(0.01)
+                await bus.publish(UserCreated(user_id=1, name="Mixed"))
+                await anyio.sleep(0.05)
+                await bus.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(bus.run)
+                    tg.start_soon(publish_event)
+
+            assert len(sync_received) == 1
+            assert len(async_received) == 1
+            assert sync_received[0].name == "Mixed"
+            assert async_received[0].name == "Mixed"
