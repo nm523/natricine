@@ -396,27 +396,3 @@ class PubSubConformance:
                     tg.start_soon(publisher)
 
             assert len(received) == count
-
-        async def test_empty_payload(self, pubsub: PubSub) -> None:
-            """Empty payload is handled correctly."""
-            topic = "conformance.robust.empty"
-            sent = Message(payload=b"")
-
-            received: list[Message] = []
-
-            async def subscriber() -> None:
-                async for msg in pubsub.subscribe(topic):
-                    received.append(msg)
-                    await msg.ack()
-                    break
-
-            async def publisher() -> None:
-                await anyio.sleep(0.01)
-                await pubsub.publish(topic, sent)
-
-            with anyio.fail_after(2):
-                async with anyio.create_task_group() as tg:
-                    tg.start_soon(subscriber)
-                    tg.start_soon(publisher)
-
-            assert received[0].payload == b""

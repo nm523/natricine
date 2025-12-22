@@ -6,7 +6,7 @@ dependencies = ["natricine-pubsub", "aioboto3>=13.0"]
 
 [project.optional-dependencies]
 types = ["types-aiobotocore[sns,sqs]"]
-test = ["pytest", "pytest-anyio", "testcontainers[localstack]"]
+test = ["pytest", "pytest-anyio", "testcontainers[localstack]", "natricine-conformance"]
 
 [build-system]
 requires = ["uv_build>=0.9.11,<0.10.0"]
