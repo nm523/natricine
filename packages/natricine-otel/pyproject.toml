@@ -1,0 +1,15 @@
+[project]
+name = "natricine-otel"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["natricine-router", "opentelemetry-api>=1.20"]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-anyio", "opentelemetry-sdk>=1.20"]
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "natricine.otel"

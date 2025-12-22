@@ -9,6 +9,7 @@ natricine-cqrs = { workspace = true }
 natricine-redisstream = { workspace = true }
 natricine-conformance = { workspace = true }
 natricine-aws = { workspace = true }
+natricine-otel = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -22,6 +23,8 @@ dev = [
     "natricine-conformance",
     # AWS type stubs for typechecking
     "natricine-aws[types,test]",
+    # OTEL for testing
+    "natricine-otel[test]",
 ]
 
 [tool.ruff]
@@ -44,4 +47,5 @@ extra-paths = [
     "packages/natricine-redisstream/src",
     "packages/natricine-conformance/src",
     "packages/natricine-aws/src",
+    "packages/natricine-otel/src",
 ]
