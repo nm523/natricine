@@ -14,7 +14,7 @@ from natricine.router.types import HandlerFunc, Middleware, NoPublishHandlerFunc
 class RouterConfig:
     """Router configuration."""
 
-    close_timeout: float = 30.0
+    close_timeout_s: float = 30.0
 
 
 class Router:

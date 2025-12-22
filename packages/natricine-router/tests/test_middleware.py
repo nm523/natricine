@@ -18,7 +18,7 @@ class TestRetryMiddleware:
         """Retry middleware should retry failed handlers."""
         attempts = 0
 
-        async def failing_handler(msg: Message) -> list[Message] | None:
+        async def failing_handler(msg: Message) -> None:
             nonlocal attempts
             attempts += 1
             if attempts < RETRY_COUNT:
@@ -34,7 +34,7 @@ class TestRetryMiddleware:
         """Retry middleware should raise after max retries."""
         attempts = 0
 
-        async def always_fails(msg: Message) -> list[Message] | None:
+        async def always_fails(msg: Message) -> None:
             nonlocal attempts
             attempts += 1
             raise ValueError("Always fails")
@@ -51,7 +51,7 @@ class TestRetryMiddleware:
         """Retry middleware should not retry on success."""
         attempts = 0
 
-        async def succeeds(msg: Message) -> list[Message] | None:
+        async def succeeds(msg: Message) -> None:
             nonlocal attempts
             attempts += 1
             return None
@@ -65,7 +65,7 @@ class TestRetryMiddleware:
         """PermanentError should skip retries."""
         attempts = 0
 
-        async def permanent_failure(msg: Message) -> list[Message] | None:
+        async def permanent_failure(msg: Message) -> None:
             nonlocal attempts
             attempts += 1
             raise PermanentError(ValueError("Don't retry this"))
@@ -83,7 +83,7 @@ class TestRetryMiddleware:
         """retry_on should only retry specified exceptions."""
         attempts = 0
 
-        async def type_error_handler(msg: Message) -> list[Message] | None:
+        async def type_error_handler(msg: Message) -> None:
             nonlocal attempts
             attempts += 1
             if attempts == 1:
@@ -105,7 +105,7 @@ class TestRetryMiddleware:
         attempts = 0
         retry_calls: list[tuple[int, Exception, Message]] = []
 
-        async def failing_handler(msg: Message) -> list[Message] | None:
+        async def failing_handler(msg: Message) -> None:
             nonlocal attempts
             attempts += 1
             if attempts < RETRY_COUNT:
@@ -137,7 +137,7 @@ class TestDeadLetterQueueMiddleware:
                     await msg.ack()
                     break
 
-            async def failing_handler(msg: Message) -> list[Message] | None:
+            async def failing_handler(msg: Message) -> None:
                 raise ValueError("Handler failed")
 
             wrapped = dead_letter_queue(pubsub, "dlq.errors")(failing_handler)
@@ -167,7 +167,7 @@ class TestDeadLetterQueueMiddleware:
                     await msg.ack()
                     break
 
-            async def failing_handler(msg: Message) -> list[Message] | None:
+            async def failing_handler(msg: Message) -> None:
                 raise ValueError("Failed")
 
             wrapped = dead_letter_queue(pubsub, "dlq.errors")(failing_handler)
@@ -187,7 +187,7 @@ class TestDeadLetterQueueMiddleware:
         """DLQ should only catch specified exception types."""
         async with InMemoryPubSub() as pubsub:
 
-            async def type_error_handler(msg: Message) -> list[Message] | None:
+            async def type_error_handler(msg: Message) -> None:
                 raise TypeError("Not caught by DLQ")
 
             # Only catch ValueError, not TypeError
@@ -206,7 +206,7 @@ class TestDeadLetterQueueMiddleware:
             def on_dlq(msg: Message, exc: Exception) -> None:
                 callback_calls.append((msg, exc))
 
-            async def failing_handler(msg: Message) -> list[Message] | None:
+            async def failing_handler(msg: Message) -> None:
                 raise ValueError("Failed")
 
             wrapped = dead_letter_queue(pubsub, "dlq.errors", on_dlq=on_dlq)(
@@ -231,7 +231,7 @@ class TestDeadLetterQueueMiddleware:
                     await msg.ack()
                     break
 
-            async def always_fails(msg: Message) -> list[Message] | None:
+            async def always_fails(msg: Message) -> None:
                 nonlocal attempts
                 attempts += 1
                 raise ValueError("Always fails")
@@ -258,7 +258,7 @@ class TestTimeoutMiddleware:
     async def test_timeout_cancels_slow_handler(self) -> None:
         """Timeout middleware should cancel slow handlers."""
 
-        async def slow_handler(msg: Message) -> list[Message] | None:
+        async def slow_handler(msg: Message) -> None:
             await anyio.sleep(10)
             return None
 
@@ -271,7 +271,7 @@ class TestTimeoutMiddleware:
         """Timeout middleware should allow fast handlers."""
         called = False
 
-        async def fast_handler(msg: Message) -> list[Message] | None:
+        async def fast_handler(msg: Message) -> None:
             nonlocal called
             called = True
             return None

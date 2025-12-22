@@ -12,6 +12,17 @@ members = [
     "natricine-router",
 ]
 
+[manifest.dependency-groups]
+dev = [
+    { name = "natricine-conformance", editable = "packages/natricine-conformance" },
+    { name = "natricine-redisstream", editable = "packages/natricine-redisstream" },
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "pytest", specifier = ">=8.0" },
+    { name = "pytest-anyio", specifier = ">=0.0.0" },
+    { name = "ruff", specifier = ">=0.8" },
+    { name = "ty", specifier = ">=0.0.1a6" },
+]
+
 [[package]]
 name = "annotated-types"
 version = "0.7.0"
@@ -73,41 +84,30 @@ wheels = [
 [[package]]
 name = "natricine"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "packages/natricine" }
 dependencies = [
     { name = "natricine-cqrs" },
     { name = "natricine-pubsub" },
     { name = "natricine-router" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "natricine-conformance" },
+[package.optional-dependencies]
+pydantic = [
+    { name = "natricine-cqrs", extra = ["pydantic"] },
+]
+redis = [
     { name = "natricine-redisstream" },
-    { name = "pydantic" },
-    { name = "pytest" },
-    { name = "pytest-anyio" },
-    { name = "ruff" },
-    { name = "ty" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "natricine-cqrs", editable = "packages/natricine-cqrs" },
+    { name = "natricine-cqrs", extras = ["pydantic"], marker = "extra == 'pydantic'", editable = "packages/natricine-cqrs" },
     { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+    { name = "natricine-redisstream", marker = "extra == 'redis'", editable = "packages/natricine-redisstream" },
     { name = "natricine-router", editable = "packages/natricine-router" },
 ]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "natricine-conformance", editable = "packages/natricine-conformance" },
-    { name = "natricine-redisstream", editable = "packages/natricine-redisstream" },
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pytest", specifier = ">=8.0" },
-    { name = "pytest-anyio", specifier = ">=0.0.0" },
-    { name = "ruff", specifier = ">=0.8" },
-    { name = "ty", specifier = ">=0.0.1a6" },
-]
+provides-extras = ["redis", "pydantic"]
 
 [[package]]
 name = "natricine-conformance"

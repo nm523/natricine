@@ -1,14 +1,8 @@
-[project]
-name = "natricine"
-version = "0.1.0"
-description = "Event-driven architecture toolkit for Python"
-requires-python = ">=3.11"
-dependencies = ["natricine-pubsub", "natricine-router", "natricine-cqrs"]
-
 [tool.uv.workspace]
 members = ["packages/*"]
 
 [tool.uv.sources]
+natricine = { workspace = true }
 natricine-pubsub = { workspace = true }
 natricine-router = { workspace = true }
 natricine-cqrs = { workspace = true }
@@ -27,6 +21,9 @@ dev = [
     "natricine-conformance",
 ]
 
+[tool.ruff]
+target-version = "py311"
+
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "PLC0415", "PLR2004"]
 
@@ -35,3 +32,12 @@ known-first-party = ["natricine"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages/*/tests"]
+
+[tool.ty.environment]
+extra-paths = [
+    "packages/natricine-pubsub/src",
+    "packages/natricine-router/src",
+    "packages/natricine-cqrs/src",
+    "packages/natricine-redisstream/src",
+    "packages/natricine-conformance/src",
+]

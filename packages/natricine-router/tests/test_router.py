@@ -18,9 +18,8 @@ class TestRouterBasic:
         async with InMemoryPubSub() as pubsub:
             received: list[Message] = []
 
-            async def handler(msg: Message) -> list[Message] | None:
+            async def handler(msg: Message) -> None:
                 received.append(msg)
-                return None
 
             router = Router()
             router.add_no_publisher_handler(
@@ -90,10 +89,9 @@ class TestRouterBasic:
         async with InMemoryPubSub() as pubsub:
             processed_msg: Message | None = None
 
-            async def handler(msg: Message) -> list[Message] | None:
+            async def handler(msg: Message) -> None:
                 nonlocal processed_msg
                 processed_msg = msg
-                return None
 
             router = Router()
             router.add_no_publisher_handler(
@@ -122,7 +120,7 @@ class TestRouterBasic:
         async with InMemoryPubSub() as pubsub:
             processed_msg: Message | None = None
 
-            async def failing_handler(msg: Message) -> list[Message] | None:
+            async def failing_handler(msg: Message) -> None:
                 nonlocal processed_msg
                 processed_msg = msg
                 raise ValueError("Handler failed")
@@ -158,7 +156,7 @@ class TestRouterMiddleware:
 
             def tracking_middleware(name: str):
                 def middleware(next_handler):
-                    async def handler(msg: Message) -> list[Message] | None:
+                    async def handler(msg: Message) -> None:
                         middleware_calls.append(name)
                         return await next_handler(msg)
 
@@ -198,7 +196,7 @@ class TestRouterMiddleware:
 
             def tracking_middleware(name: str):
                 def middleware(next_handler):
-                    async def handler(msg: Message) -> list[Message] | None:
+                    async def handler(msg: Message) -> None:
                         middleware_calls.append(name)
                         return await next_handler(msg)
 
