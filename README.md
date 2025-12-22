@@ -1,6 +1,6 @@
 # natricine
 
-Python port of [watermill](https://github.com/ThreeDotsLabs/watermill). Async-first event-driven architecture toolkit.
+Python port of [watermill](https://github.com/ThreeDotsLabs/watermill). Async-first event-driven architecture toolkit. Vibe coded with Opus 4.5.
 
 ## Installation
 
