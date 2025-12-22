@@ -6,17 +6,19 @@ A simple chat application demonstrating natricine's CQRS pattern with FastAPI.
 
 ```
 Commands              Events                 Handlers
-─────────             ──────                 ────────
-SendMessage   ──►     MessageSent    ──►     log_message_sent
-JoinRoom      ──►     UserJoined     ──►     log_user_joined
-LeaveRoom     ──►     UserLeft       ──►     log_user_left
+---------             ------                 --------
+SendMessage   ->      MessageSent    ->      log_message_sent
+JoinRoom      ->      UserJoined     ->      log_user_joined
+LeaveRoom     ->      UserLeft       ->      log_user_left
 ```
 
 ## Features
 
 - **Commands**: `SendMessage`, `JoinRoom`, `LeaveRoom`
 - **Events**: `MessageSent`, `UserJoined`, `UserLeft`
-- **Dependency Injection**: `ChatStore` injected via `Depends`
+- **Dependency Injection**:
+  - `ChatStore` injected via natricine's `Depends`
+  - `CommandBus`/`EventBus` injected via FastAPI's `Depends`
 - **FastAPI Integration**: REST endpoints that dispatch commands
 
 ## Running
@@ -24,7 +26,7 @@ LeaveRoom     ──►     UserLeft       ──►     log_user_left
 ```bash
 cd examples/chat
 uv sync
-uv run python app.py
+uv run python -m chat_example.app
 ```
 
 ## API
@@ -52,7 +54,12 @@ curl -X POST "http://localhost:8000/rooms/general/leave?user_id=alice"
 
 ## Code Structure
 
-- `models.py` - Pydantic models for commands and events
-- `store.py` - In-memory chat storage with dependency provider
-- `handlers.py` - Command and event handlers
-- `app.py` - FastAPI application with lifespan management
+```
+src/chat_example/
+  __init__.py      - Package init
+  models.py        - Pydantic models for commands and events
+  store.py         - In-memory chat storage
+  dependencies.py  - FastAPI dependency providers (buses, store)
+  handlers.py      - Command and event handlers
+  app.py           - FastAPI application with lifespan management
+```

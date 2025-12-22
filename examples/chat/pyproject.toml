@@ -3,12 +3,20 @@ name = "natricine-chat-example"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "natricine-cqrs[pydantic]",
+    "natricine[pydantic]",
     "fastapi>=0.100",
     "uvicorn>=0.20",
 ]
 
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "chat_example"
+
 [tool.uv.sources]
+natricine = { path = "../../packages/natricine" }
 natricine-cqrs = { path = "../../packages/natricine-cqrs" }
 natricine-router = { path = "../../packages/natricine-router" }
 natricine-pubsub = { path = "../../packages/natricine-pubsub" }

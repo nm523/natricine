@@ -3,7 +3,8 @@
 import logging
 from typing import Annotated
 
-from models import (
+from chat_example.dependencies import get_chat_store, get_command_bus, get_event_bus
+from chat_example.models import (
     JoinRoom,
     LeaveRoom,
     MessageSent,
@@ -11,20 +12,14 @@ from models import (
     UserJoined,
     UserLeft,
 )
-from store import ChatStore, get_chat_store
-
-from natricine.cqrs import CommandBus, Depends, EventBus, PydanticMarshaler
-from natricine.pubsub import InMemoryPubSub
+from chat_example.store import ChatStore
+from natricine.cqrs import Depends
 
 logger = logging.getLogger(__name__)
 
-# Shared pubsub and marshaler
-pubsub = InMemoryPubSub()
-marshaler = PydanticMarshaler()
-
-# Create buses
-command_bus = CommandBus(pubsub, pubsub, marshaler)
-event_bus = EventBus(pubsub, pubsub, marshaler)
+# Get bus instances for handler registration
+command_bus = get_command_bus()
+event_bus = get_event_bus()
 
 
 # Command handlers

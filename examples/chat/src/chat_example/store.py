@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 
-from models import MessageSent, UserJoined
+from chat_example.models import MessageSent, UserJoined
 
 
 @dataclass
@@ -46,12 +46,3 @@ class ChatStore:
             UserJoined(room_id=room_id, user_id=uid, username=name)
             for uid, name in room.members.items()
         ]
-
-
-# Global store instance
-chat_store = ChatStore()
-
-
-def get_chat_store() -> ChatStore:
-    """Dependency provider for ChatStore."""
-    return chat_store
