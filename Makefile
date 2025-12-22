@@ -1,4 +1,4 @@
-.PHONY: test lint typecheck check sync conformance
+.PHONY: test lint typecheck check sync conformance build
 
 sync:
 	uv sync
@@ -20,3 +20,6 @@ conformance:
 	@echo ""
 	@echo "=== RedisStream Conformance (requires REDIS_URL) ==="
 	uv run pytest packages/natricine-conformance/tests/test_redisstream_conformance.py -v --tb=short
+
+build:
+	uv build --all
