@@ -1,0 +1,13 @@
+[project]
+name = "natricine-conformance"
+version = "0.1.0"
+description = "Conformance test suite for natricine pub/sub implementations"
+requires-python = ">=3.11"
+dependencies = ["natricine-pubsub", "pytest>=8.0", "pytest-anyio>=0.0.0", "anyio>=4.0"]
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "natricine.conformance"

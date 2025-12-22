@@ -13,6 +13,7 @@ natricine-pubsub = { workspace = true }
 natricine-router = { workspace = true }
 natricine-cqrs = { workspace = true }
 natricine-redisstream = { workspace = true }
+natricine-conformance = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -23,6 +24,7 @@ dev = [
     "ty>=0.0.1a6",
     # Backend implementations for testing
     "natricine-redisstream",
+    "natricine-conformance",
 ]
 
 [tool.ruff.lint]

@@ -5,6 +5,7 @@ requires-python = ">=3.11"
 [manifest]
 members = [
     "natricine",
+    "natricine-conformance",
     "natricine-cqrs",
     "natricine-pubsub",
     "natricine-redisstream",
@@ -81,6 +82,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "natricine-conformance" },
     { name = "natricine-redisstream" },
     { name = "pydantic" },
     { name = "pytest" },
@@ -98,12 +100,32 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "natricine-conformance", editable = "packages/natricine-conformance" },
     { name = "natricine-redisstream", editable = "packages/natricine-redisstream" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-anyio", specifier = ">=0.0.0" },
     { name = "ruff", specifier = ">=0.8" },
     { name = "ty", specifier = ">=0.0.1a6" },
+]
+
+[[package]]
+name = "natricine-conformance"
+version = "0.1.0"
+source = { editable = "packages/natricine-conformance" }
+dependencies = [
+    { name = "anyio" },
+    { name = "natricine-pubsub" },
+    { name = "pytest" },
+    { name = "pytest-anyio" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "anyio", specifier = ">=4.0" },
+    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+    { name = "pytest", specifier = ">=8.0" },
+    { name = "pytest-anyio", specifier = ">=0.0.0" },
 ]
 
 [[package]]
