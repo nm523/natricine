@@ -1,0 +1,139 @@
+# natricine
+
+Python port of [watermill](https://github.com/ThreeDotsLabs/watermill). Async-first event-driven architecture toolkit.
+
+## Installation
+
+```bash
+pip install natricine
+
+# With extras
+pip install natricine[pydantic]      # Pydantic marshaler for CQRS
+pip install natricine-redisstream    # Redis Streams backend
+pip install natricine-aws            # AWS SNS/SQS backend
+
+# Or with uv
+uv add natricine
+uv add natricine-redisstream
+uv add natricine-aws
+```
+
+## Quick Start
+
+```python
+import asyncio
+from natricine.pubsub import InMemoryPubSub, Message
+from natricine.cqrs import CommandBus, EventBus, PydanticMarshaler
+from pydantic import BaseModel
+
+# Define commands and events
+class CreateUser(BaseModel):
+    user_id: str
+    name: str
+
+class UserCreated(BaseModel):
+    user_id: str
+    name: str
+
+# Set up buses
+pubsub = InMemoryPubSub()
+marshaler = PydanticMarshaler()
+command_bus = CommandBus(pubsub, pubsub, marshaler)
+event_bus = EventBus(pubsub, pubsub, marshaler)
+
+# Register handlers
+@command_bus.handler
+async def handle_create_user(cmd: CreateUser) -> None:
+    print(f"Creating user: {cmd.name}")
+    await event_bus.publish(UserCreated(user_id=cmd.user_id, name=cmd.name))
+
+@event_bus.handler
+async def on_user_created(event: UserCreated) -> None:
+    print(f"User created: {event.name}")
+
+# Run
+async def main():
+    async with pubsub:
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(command_bus.run())
+            tg.create_task(event_bus.run())
+
+            await command_bus.send(CreateUser(user_id="1", name="Alice"))
+            await asyncio.sleep(0.1)
+
+            await command_bus.close()
+            await event_bus.close()
+
+asyncio.run(main())
+```
+
+## Package Structure
+
+```
+packages/
+  natricine/              # Meta-package bundling core packages
+  natricine-pubsub/       # Message, Publisher, Subscriber protocols + in-memory
+  natricine-router/       # Router, Handler, Middleware
+  natricine-cqrs/         # CommandBus, EventBus, Marshaler
+  natricine-redisstream/  # Redis Streams backend
+  natricine-aws/          # AWS SNS/SQS backend
+  natricine-conformance/  # Test suite for backend implementations
+```
+
+## Backends
+
+### In-Memory (built-in)
+
+```python
+from natricine.pubsub import InMemoryPubSub
+
+pubsub = InMemoryPubSub()
+```
+
+### Redis Streams
+
+```python
+from redis.asyncio import Redis
+from natricine.redisstream import RedisStreamPublisher, RedisStreamSubscriber
+
+redis = Redis.from_url("redis://localhost:6379")
+publisher = RedisStreamPublisher(redis)
+subscriber = RedisStreamSubscriber(redis, group_name="my-app", consumer_name="worker-1")
+```
+
+### AWS SQS/SNS
+
+```python
+import aioboto3
+from natricine.aws import SQSPublisher, SQSSubscriber, SNSPublisher, SNSSubscriber
+
+session = aioboto3.Session()
+
+# Direct SQS
+publisher = SQSPublisher(session)
+subscriber = SQSSubscriber(session)
+
+# SNS fan-out to SQS
+sns_publisher = SNSPublisher(session)
+sns_subscriber = SNSSubscriber(session, config=SNSConfig(consumer_group="my-group"))
+```
+
+## Middleware
+
+```python
+from natricine.router import Router
+from natricine.router.middleware import retry, Retry
+
+router = Router()
+router.add_middleware(retry(max_attempts=3, delay_s=1.0))
+
+# Or per-handler
+@router.handler("topic", middlewares=[Retry(max_attempts=5)])
+async def handle(msg: Message) -> list[Message]:
+    ...
+```
+
+## References
+
+- [watermill](https://github.com/ThreeDotsLabs/watermill) - Go event-driven library (inspiration)
+- [watermill-aws](https://github.com/ThreeDotsLabs/watermill-aws) - AWS backend reference
