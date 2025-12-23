@@ -1,7 +1,10 @@
+"""Test fixtures for natricine-redisstream."""
+
 import os
 
 import pytest
 from redis.asyncio import Redis
+from testcontainers.redis import RedisContainer
 
 
 @pytest.fixture
@@ -9,21 +12,37 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
-def redis_available() -> bool:
-    """Check if Redis is available for testing."""
-    return os.environ.get("REDIS_URL") is not None
+@pytest.fixture(scope="session")
+def redis_container():
+    """Start a Redis container for the test session."""
+    # Skip container if REDIS_URL is set (allows using external Redis)
+    if os.environ.get("REDIS_URL"):
+        yield None
+        return
+
+    # Disable Ryuk for podman compatibility
+    os.environ.setdefault("TESTCONTAINERS_RYUK_DISABLED", "true")
+
+    with RedisContainer() as container:
+        yield container
 
 
 @pytest.fixture
-async def redis_client():
+async def redis_client(redis_container):
     """Create a Redis client for testing."""
-    url = os.environ.get("REDIS_URL", "redis://localhost:6379")
+    if redis_container is None:
+        # Use external Redis from REDIS_URL
+        url = os.environ["REDIS_URL"]
+    else:
+        # Use testcontainers Redis
+        host = redis_container.get_container_host_ip()
+        port = redis_container.get_exposed_port(6379)
+        url = f"redis://{host}:{port}"
+
     client = Redis.from_url(url, decode_responses=False)
     try:
         await client.ping()
         yield client
-    except Exception:
-        pytest.skip("Redis not available")
     finally:
         await client.aclose()
 

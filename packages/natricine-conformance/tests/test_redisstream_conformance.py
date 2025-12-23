@@ -1,7 +1,6 @@
 """Conformance tests for RedisStream pub/sub.
 
-These tests require a running Redis instance.
-Set REDIS_URL environment variable or use default localhost:6379.
+Uses testcontainers for Redis, or set REDIS_URL for external Redis.
 """
 
 import os
@@ -9,15 +8,12 @@ import uuid
 
 import pytest
 from redis.asyncio import Redis
+from testcontainers.redis import RedisContainer
 
 from natricine.conformance import PubSubConformance
 from natricine.redisstream import RedisStreamPublisher, RedisStreamSubscriber
 
-# Skip all tests if redis is not available
-pytestmark = pytest.mark.skipif(
-    os.environ.get("REDIS_URL") is None,
-    reason="REDIS_URL not set - Redis not available",
-)
+pytestmark = pytest.mark.anyio
 
 
 class RedisPubSubAdapter:
@@ -68,10 +64,33 @@ class RedisPubSubAdapter:
         await self.close()
 
 
+@pytest.fixture(scope="session")
+def redis_container():
+    """Start a Redis container for the test session."""
+    # Skip container if REDIS_URL is set (allows using external Redis)
+    if os.environ.get("REDIS_URL"):
+        yield None
+        return
+
+    # Disable Ryuk for podman compatibility
+    os.environ.setdefault("TESTCONTAINERS_RYUK_DISABLED", "true")
+
+    with RedisContainer() as container:
+        yield container
+
+
 @pytest.fixture
-async def pubsub():
+async def pubsub(redis_container):
     """Provide Redis pub/sub adapter for conformance testing."""
-    url = os.environ.get("REDIS_URL", "redis://localhost:6379")
+    if redis_container is None:
+        # Use external Redis from REDIS_URL
+        url = os.environ["REDIS_URL"]
+    else:
+        # Use testcontainers Redis
+        host = redis_container.get_container_host_ip()
+        port = redis_container.get_exposed_port(6379)
+        url = f"redis://{host}:{port}"
+
     client = Redis.from_url(url, decode_responses=False)
 
     try:

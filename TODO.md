@@ -3,7 +3,7 @@
 ## In Progress
 
 ### natricine-redisstream
-- [ ] Update tests to use testcontainers for Redis
+- [x] Update tests to use testcontainers for Redis
 - [x] Fix PLR2004 magic number lint errors in tests
 - [x] Add package to root pyproject.toml dependencies
 

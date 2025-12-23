@@ -94,7 +94,8 @@ class RedisStreamSubscriber:
         # Decode fields
         decoded = {k.decode(): v for k, v in fields.items()}
 
-        uuid_str = decoded.get("uuid", "")
+        uuid_raw = decoded.get("uuid", b"")
+        uuid_str = uuid_raw.decode() if isinstance(uuid_raw, bytes) else uuid_raw
         payload = decoded.get("payload", b"")
         if isinstance(payload, str):
             payload = payload.encode()

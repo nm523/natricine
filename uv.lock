@@ -20,6 +20,7 @@ dev = [
     { name = "natricine-conformance", editable = "packages/natricine-conformance" },
     { name = "natricine-otel", extras = ["test"], editable = "packages/natricine-otel" },
     { name = "natricine-redisstream", editable = "packages/natricine-redisstream" },
+    { name = "natricine-redisstream", extras = ["test"], editable = "packages/natricine-redisstream" },
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-anyio", specifier = ">=0.0.0" },
@@ -798,11 +799,22 @@ dependencies = [
     { name = "redis" },
 ]
 
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+    { name = "pytest-anyio" },
+    { name = "testcontainers", extra = ["redis"] },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+    { name = "pytest", marker = "extra == 'test'" },
+    { name = "pytest-anyio", marker = "extra == 'test'" },
     { name = "redis", specifier = ">=5.0" },
+    { name = "testcontainers", extras = ["redis"], marker = "extra == 'test'" },
 ]
+provides-extras = ["test"]
 
 [[package]]
 name = "natricine-router"
@@ -1259,6 +1271,9 @@ wheels = [
 [package.optional-dependencies]
 localstack = [
     { name = "boto3" },
+]
+redis = [
+    { name = "redis" },
 ]
 
 [[package]]

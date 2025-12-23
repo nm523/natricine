@@ -25,6 +25,8 @@ dev = [
     "natricine-aws[types,test]",
     # OTEL for testing
     "natricine-otel[test]",
+    # Redis Streams with testcontainers
+    "natricine-redisstream[test]",
 ]
 
 [tool.ruff]
