@@ -63,10 +63,7 @@ async def test_sqs_multiple_messages(
             endpoint_url=endpoint_url,
         ) as subscriber:
             # Publish multiple messages
-            messages = [
-                Message(payload=f"msg-{i}".encode())
-                for i in range(msg_count)
-            ]
+            messages = [Message(payload=f"msg-{i}".encode()) for i in range(msg_count)]
             await publisher.publish(topic, *messages)
 
             # Receive all messages

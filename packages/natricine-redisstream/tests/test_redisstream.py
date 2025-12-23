@@ -64,9 +64,7 @@ class TestRedisStreamPublisher:
 
 
 class TestRedisStreamSubscriber:
-    async def test_subscribe_receives_message(
-        self, redis_client, clean_stream
-    ) -> None:
+    async def test_subscribe_receives_message(self, redis_client, clean_stream) -> None:
         stream = clean_stream(f"test:sub:{uuid.uuid4()}")
         group = f"group:{uuid.uuid4()}"
         consumer = "consumer1"
@@ -76,9 +74,7 @@ class TestRedisStreamSubscriber:
         await publisher.publish(stream, Message(payload=b"test message"))
 
         # Subscribe and receive
-        subscriber = RedisStreamSubscriber(
-            redis_client, group, consumer, block_ms=100
-        )
+        subscriber = RedisStreamSubscriber(redis_client, group, consumer, block_ms=100)
         received: list[Message] = []
 
         async for msg in subscriber.subscribe(stream):

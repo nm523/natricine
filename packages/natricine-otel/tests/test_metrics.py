@@ -173,9 +173,7 @@ class TestMetricsPublisher:
 
             await publisher.publish("test.topic", Message(payload=b"hello"))
 
-        value, attrs = get_metric_value(
-            metric_reader, "messaging.client.sent.messages"
-        )
+        value, attrs = get_metric_value(metric_reader, "messaging.client.sent.messages")
         assert value == 1
         assert attrs["messaging.system"] == "natricine"
         assert attrs["messaging.operation.name"] == "send"
@@ -215,7 +213,5 @@ class TestMetricsPublisher:
                 Message(payload=b"three"),
             )
 
-        value, attrs = get_metric_value(
-            metric_reader, "messaging.client.sent.messages"
-        )
+        value, attrs = get_metric_value(metric_reader, "messaging.client.sent.messages")
         assert value == batch_size
