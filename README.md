@@ -7,15 +7,10 @@ Python port of [watermill](https://github.com/ThreeDotsLabs/watermill). Async-fi
 ```bash
 pip install natricine
 
-# With extras
-pip install natricine[pydantic]      # Pydantic marshaler for CQRS
-pip install natricine-redisstream    # Redis Streams backend
-pip install natricine-aws            # AWS SNS/SQS backend
-
-# Or with uv
-uv add natricine
-uv add natricine-redisstream
-uv add natricine-aws
+# Backends
+pip install natricine-redisstream    # Redis Streams
+pip install natricine-aws            # AWS SNS/SQS
+pip install natricine-otel           # OpenTelemetry tracing/metrics
 ```
 
 ## Quick Start
@@ -70,14 +65,29 @@ asyncio.run(main())
 ## Package Structure
 
 ```
-packages/
-  natricine/              # Meta-package bundling core packages
-  natricine-pubsub/       # Message, Publisher, Subscriber protocols + in-memory
-  natricine-router/       # Router, Handler, Middleware
-  natricine-cqrs/         # CommandBus, EventBus, Marshaler
-  natricine-redisstream/  # Redis Streams backend
-  natricine-aws/          # AWS SNS/SQS backend
-  natricine-conformance/  # Test suite for backend implementations
+                    ┌─────────────────┐
+                    │    natricine    │  ← Meta-package (install this)
+                    └────────┬────────┘
+         ┌──────────────────┼──────────────────┐
+         ▼                  ▼                  ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ natricine-cqrs  │ │ natricine-router│ │ natricine-pubsub│
+│ CommandBus      │ │ Router          │ │ Message         │
+│ EventBus        │ │ Middleware      │ │ Publisher       │
+└────────┬────────┘ └────────┬────────┘ │ Subscriber      │
+         └───────────────────┴──────────│ InMemoryPubSub  │
+                                        └─────────────────┘
+
+Backends (install separately):
+┌─────────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│ natricine-redisstream│ │ natricine-aws   │ │ natricine-otel  │
+│ Redis Streams       │ │ SQS/SNS         │ │ OpenTelemetry   │
+└─────────────────────┘ └─────────────────┘ └─────────────────┘
+
+Testing:
+┌─────────────────────┐
+│natricine-conformance│  ← Test suite for backends
+└─────────────────────┘
 ```
 
 ## Backends
@@ -121,16 +131,11 @@ sns_subscriber = SNSSubscriber(session, config=SNSConfig(consumer_group="my-grou
 ## Middleware
 
 ```python
-from natricine.router import Router
-from natricine.router.middleware import retry, Retry
+from natricine.router import Router, retry, timeout
 
 router = Router()
-router.add_middleware(retry(max_attempts=3, delay_s=1.0))
-
-# Or per-handler
-@router.handler("topic", middlewares=[Retry(max_attempts=5)])
-async def handle(msg: Message) -> list[Message]:
-    ...
+router.add_middleware(retry(max_retries=3, delay=1.0))
+router.add_middleware(timeout(seconds=30))
 ```
 
 ## References
