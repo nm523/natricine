@@ -58,3 +58,11 @@ conformance: ## Run conformance tests (requires Redis/AWS containers)
 .PHONY: build
 build: ## Build all packages
 	uv build --all
+
+.PHONY: docs
+docs: ## Build documentation
+	uv run mkdocs build
+
+.PHONY: docs-serve
+docs-serve: ## Serve documentation locally
+	uv run mkdocs serve

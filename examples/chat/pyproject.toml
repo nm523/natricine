@@ -17,6 +17,3 @@ module-name = "chat_example"
 
 [tool.uv.sources]
 natricine = { path = "../../packages/natricine" }
-natricine-cqrs = { path = "../../packages/natricine-cqrs" }
-natricine-router = { path = "../../packages/natricine-router" }
-natricine-pubsub = { path = "../../packages/natricine-pubsub" }
