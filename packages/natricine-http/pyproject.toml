@@ -1,0 +1,16 @@
+[project]
+name = "natricine-http"
+version = "0.1.0"
+description = "HTTP pub/sub backend for natricine"
+requires-python = ">=3.11"
+dependencies = ["natricine-pubsub", "httpx>=0.27", "starlette>=0.38"]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-anyio", "httpx", "fastapi>=0.115"]
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "natricine.http"

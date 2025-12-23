@@ -11,6 +11,7 @@ natricine-conformance = { workspace = true }
 natricine-aws = { workspace = true }
 natricine-otel = { workspace = true }
 natricine-sql = { workspace = true }
+natricine-http = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -30,6 +31,8 @@ dev = [
     "natricine-redisstream[test]",
     # SQL with SQLite for testing
     "natricine-sql[test]",
+    # HTTP for testing
+    "natricine-http[test]",
     # Documentation
     "mkdocs>=1.6",
     "mkdocs-material>=9.5",
@@ -58,4 +61,5 @@ extra-paths = [
     "packages/natricine-aws/src",
     "packages/natricine-otel/src",
     "packages/natricine-sql/src",
+    "packages/natricine-http/src",
 ]
