@@ -10,8 +10,8 @@ from uuid import UUID
 import anyio
 
 from natricine.pubsub import Message
-from natricine.backends.sql.config import SQLConfig
-from natricine.backends.sql.dialect import Dialect, DialectQueries
+from natricine_sql.config import SQLConfig
+from natricine_sql.dialect import Dialect, DialectQueries
 
 
 class SQLSubscriber:

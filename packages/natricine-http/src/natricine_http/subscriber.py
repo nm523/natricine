@@ -10,8 +10,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Route
 
-from natricine.backends.http.marshaling import extract_metadata, extract_uuid
 from natricine.pubsub import Message
+from natricine_http.marshaling import extract_metadata, extract_uuid
 
 
 @dataclass
@@ -35,7 +35,7 @@ class HTTPSubscriber:
 
     Example:
         from fastapi import FastAPI
-        from natricine.backends.http import HTTPSubscriber
+        from natricine_http import HTTPSubscriber
 
         app = FastAPI()
         subscriber = HTTPSubscriber()

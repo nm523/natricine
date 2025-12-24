@@ -7,11 +7,11 @@ import os
 import uuid
 
 import pytest
+from natricine_redis import RedisStreamPublisher, RedisStreamSubscriber
 from redis.asyncio import Redis
 from testcontainers.redis import RedisContainer
 
 from natricine.conformance import PubSubConformance
-from natricine.backends.redis import RedisStreamPublisher, RedisStreamSubscriber
 
 pytestmark = pytest.mark.anyio
 

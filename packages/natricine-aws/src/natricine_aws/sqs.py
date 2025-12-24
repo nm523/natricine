@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 
 import aioboto3
 
-from natricine.backends.aws.config import SQSConfig
-from natricine.backends.aws.marshaling import (
+from natricine.pubsub import Message
+from natricine_aws.config import SQSConfig
+from natricine_aws.marshaling import (
     encode_message_body,
     from_sqs_message,
     to_message_attributes,
 )
-from natricine.pubsub import Message
 
 if TYPE_CHECKING:
     from types_aiobotocore_sqs import SQSClient

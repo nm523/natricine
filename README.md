@@ -72,13 +72,11 @@ natricine                     # Core package
 ├── router                    # Router, Middleware
 └── cqrs                      # CommandBus, EventBus
 
-natricine.backends.*          # Backends (install separately)
-├── redis                     # pip install natricine-redisstream
-├── aws                       # pip install natricine-aws
-├── sql                       # pip install natricine-sql
-└── http                      # pip install natricine-http
-
-natricine.otel                # OpenTelemetry (pip install natricine-otel)
+natricine_redis               # pip install natricine-redisstream
+natricine_aws                 # pip install natricine-aws
+natricine_sql                 # pip install natricine-sql
+natricine_http                # pip install natricine-http
+natricine_otel                # pip install natricine-otel
 ```
 
 ## Backends
@@ -95,7 +93,7 @@ pubsub = InMemoryPubSub()
 
 ```python
 from redis.asyncio import Redis
-from natricine.backends.redis import RedisStreamPublisher, RedisStreamSubscriber
+from natricine_redis import RedisStreamPublisher, RedisStreamSubscriber
 
 redis = Redis.from_url("redis://localhost:6379")
 publisher = RedisStreamPublisher(redis)
@@ -106,7 +104,7 @@ subscriber = RedisStreamSubscriber(redis, group_name="my-app", consumer_name="wo
 
 ```python
 import aioboto3
-from natricine.backends.aws import SQSPublisher, SQSSubscriber, SNSPublisher, SNSSubscriber
+from natricine_aws import SQSPublisher, SQSSubscriber, SNSPublisher, SNSSubscriber, SNSConfig
 
 session = aioboto3.Session()
 

@@ -2,8 +2,7 @@
 
 import aiosqlite
 import pytest
-
-from natricine.backends.sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
+from natricine_sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
 
 
 @pytest.fixture

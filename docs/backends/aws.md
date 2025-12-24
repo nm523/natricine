@@ -14,7 +14,7 @@ Direct queue-based messaging:
 
 ```python
 import aioboto3
-from natricine.backends.aws import SQSPublisher, SQSSubscriber
+from natricine_aws import SQSPublisher, SQSSubscriber
 from natricine.pubsub import Message
 
 session = aioboto3.Session()
@@ -36,7 +36,7 @@ async for msg in subscriber.subscribe("orders"):
 For fan-out across multiple subscriber groups:
 
 ```python
-from natricine.backends.aws import SNSPublisher, SNSSubscriber, SNSConfig
+from natricine_aws import SNSPublisher, SNSSubscriber, SNSConfig
 
 # Publisher sends to SNS topic
 publisher = SNSPublisher(session)
@@ -60,7 +60,7 @@ await publisher.publish("user-events", Message(payload=b"user created"))
 ### SQSConfig
 
 ```python
-from natricine.backends.aws import SQSConfig
+from natricine_aws import SQSConfig
 
 config = SQSConfig(
     wait_time_s=20,           # Long polling wait time (max 20)
@@ -75,7 +75,7 @@ subscriber = SQSSubscriber(session, config=config)
 ### SNSConfig
 
 ```python
-from natricine.backends.aws import SNSConfig, SQSConfig
+from natricine_aws import SNSConfig, SQSConfig
 
 config = SNSConfig(
     consumer_group="my-service",  # Used in SQS queue name

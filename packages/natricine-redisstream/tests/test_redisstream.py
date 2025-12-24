@@ -7,9 +7,9 @@ Set REDIS_URL environment variable or use default localhost:6379.
 import uuid
 
 import pytest
+from natricine_redis import RedisStreamPublisher, RedisStreamSubscriber
 
 from natricine.pubsub import Message
-from natricine.backends.redis import RedisStreamPublisher, RedisStreamSubscriber
 
 pytestmark = pytest.mark.anyio
 

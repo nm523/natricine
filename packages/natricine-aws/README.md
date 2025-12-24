@@ -16,7 +16,7 @@ Direct queue messaging with competing consumers.
 import asyncio
 import aioboto3
 from natricine.pubsub import Message
-from natricine.backends.aws import SQSPublisher, SQSSubscriber, SQSConfig
+from natricine_aws import SQSPublisher, SQSSubscriber, SQSConfig
 
 async def main():
     session = aioboto3.Session()
@@ -65,7 +65,7 @@ Remove `sqs:CreateQueue` if `create_queue_if_missing=False`.
 Pub/sub with fan-out to multiple consumer groups.
 
 ```python
-from natricine.backends.aws import SNSPublisher, SNSSubscriber, SNSConfig
+from natricine_aws import SNSPublisher, SNSSubscriber, SNSConfig
 
 async def main():
     session = aioboto3.Session()

@@ -2,8 +2,8 @@
 
 import httpx
 import pytest
+from natricine_http import HTTPPublisher, HTTPPublisherConfig
 
-from natricine.backends.http import HTTPPublisher, HTTPPublisherConfig
 from natricine.pubsub import Message
 
 

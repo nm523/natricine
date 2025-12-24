@@ -15,7 +15,7 @@ except ImportError:
     CONFORMANCE_AVAILABLE = False
     PubSubConformance = None  # type: ignore[misc, assignment]
 
-from natricine.backends.aws import SQSPublisher, SQSSubscriber
+from natricine_aws import SQSPublisher, SQSSubscriber
 
 # Skip all tests if conformance package not available
 pytestmark = pytest.mark.skipif(

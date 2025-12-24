@@ -4,9 +4,9 @@ from uuid import uuid4
 
 import anyio
 import pytest
+from natricine_sql import SQLConfig, SQLPublisher, SQLSubscriber
 
 from natricine.pubsub import Message
-from natricine.backends.sql import SQLConfig, SQLPublisher, SQLSubscriber
 
 
 @pytest.mark.anyio

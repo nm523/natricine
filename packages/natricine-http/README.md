@@ -13,7 +13,7 @@ pip install natricine-http
 Send messages as HTTP POST requests:
 
 ```python
-from natricine.backends.http import HTTPPublisher, HTTPPublisherConfig
+from natricine_http import HTTPPublisher, HTTPPublisherConfig
 from natricine.pubsub import Message
 
 config = HTTPPublisherConfig(base_url="http://api.example.com")
@@ -41,7 +41,7 @@ Receive webhooks via a Starlette ASGI app:
 ```python
 import asyncio
 from fastapi import FastAPI
-from natricine.backends.http import HTTPSubscriber
+from natricine_http import HTTPSubscriber
 
 app = FastAPI()
 subscriber = HTTPSubscriber()

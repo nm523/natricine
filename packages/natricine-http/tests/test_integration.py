@@ -5,11 +5,11 @@ from http import HTTPStatus
 
 import httpx
 import pytest
+from natricine_http import HTTPPublisher, HTTPPublisherConfig, HTTPSubscriber
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
 
-from natricine.backends.http import HTTPPublisher, HTTPPublisherConfig, HTTPSubscriber
 from natricine.pubsub import Message
 
 

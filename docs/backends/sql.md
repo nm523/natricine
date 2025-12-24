@@ -16,7 +16,7 @@ pip install natricine-sql[sqlite]
 
 ```python
 import asyncpg
-from natricine.backends.sql import SQLPublisher, SQLSubscriber, SQLConfig, PostgresDialect
+from natricine_sql import SQLPublisher, SQLSubscriber, SQLConfig, PostgresDialect
 
 pool = await asyncpg.create_pool("postgres://user:pass@localhost/db")
 
@@ -42,7 +42,7 @@ SQLite is suitable for testing and single-process development:
 
 ```python
 import aiosqlite
-from natricine.backends.sql import SQLPublisher, SQLSubscriber, SQLConfig, SQLiteDialect
+from natricine_sql import SQLPublisher, SQLSubscriber, SQLConfig, SQLiteDialect
 
 conn = await aiosqlite.connect(":memory:")
 
@@ -56,7 +56,7 @@ subscriber = SQLSubscriber(conn, dialect, config)
 ## Configuration
 
 ```python
-from natricine.backends.sql import SQLConfig
+from natricine_sql import SQLConfig
 
 config = SQLConfig(
     consumer_group="my-service",   # Consumer group name
