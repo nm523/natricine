@@ -1,5 +1,7 @@
 """Tests for HTTPPublisher."""
 
+import json
+
 import httpx
 import pytest
 from natricine_http import HTTPPublisher, HTTPPublisherConfig
@@ -9,7 +11,7 @@ from natricine.pubsub import Message
 
 @pytest.mark.anyio
 async def test_publish_sends_post_request() -> None:
-    """Publisher sends POST request with correct headers."""
+    """Publisher sends POST request with correct headers (watermill-compatible)."""
     received_requests: list[httpx.Request] = []
 
     async def mock_handler(request: httpx.Request) -> httpx.Response:
@@ -32,8 +34,9 @@ async def test_publish_sends_post_request() -> None:
     assert req.method == "POST"
     assert str(req.url) == "http://test.example.com/orders"
     assert req.content == b"test payload"
-    assert req.headers["X-Natricine-UUID"] == str(msg.uuid)
-    assert req.headers["X-Natricine-Meta-key"] == "value"
+    # Watermill-compatible headers
+    assert req.headers["Message-Uuid"] == str(msg.uuid)
+    assert json.loads(req.headers["Message-Metadata"]) == {"key": "value"}
     assert req.headers["Content-Type"] == "application/octet-stream"
 
     await publisher.close()

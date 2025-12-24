@@ -6,7 +6,7 @@ import httpx
 
 from natricine.pubsub import Message
 from natricine_http.config import HTTPPublisherConfig
-from natricine_http.marshaling import META_PREFIX, UUID_HEADER
+from natricine_http.marshaling import metadata_to_header
 
 
 class HTTPPublisher:
@@ -14,8 +14,10 @@ class HTTPPublisher:
 
     Messages are sent to {base_url}/{topic} with:
     - Payload as request body
-    - UUID in X-Natricine-UUID header
-    - Metadata in X-Natricine-Meta-{key} headers
+    - UUID in Message-Uuid header (configurable)
+    - Metadata as JSON in Message-Metadata header (configurable)
+
+    Compatible with watermill-http default format.
 
     Example:
         config = HTTPPublisherConfig(base_url="http://api.example.com")
@@ -52,9 +54,9 @@ class HTTPPublisher:
 
         for message in messages:
             headers = {
-                UUID_HEADER: str(message.uuid),
+                self._config.uuid_header: str(message.uuid),
+                self._config.metadata_header: metadata_to_header(message.metadata),
                 "Content-Type": "application/octet-stream",
-                **{f"{META_PREFIX}{k}": v for k, v in message.metadata.items()},
             }
             response = await client.post(url, content=message.payload, headers=headers)
             response.raise_for_status()

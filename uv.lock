@@ -1084,7 +1084,7 @@ wheels = [
 
 [[package]]
 name = "natricine"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "packages/natricine" }
 dependencies = [
     { name = "anyio" },

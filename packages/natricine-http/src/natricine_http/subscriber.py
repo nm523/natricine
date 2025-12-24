@@ -11,6 +11,7 @@ from starlette.responses import Response
 from starlette.routing import Route
 
 from natricine.pubsub import Message
+from natricine_http.config import HTTPSubscriberConfig
 from natricine_http.marshaling import extract_metadata, extract_uuid
 
 
@@ -33,6 +34,8 @@ class HTTPSubscriber:
     - ack() returns HTTP 200
     - nack() returns HTTP 500
 
+    Compatible with watermill-http default format.
+
     Example:
         from fastapi import FastAPI
         from natricine_http import HTTPSubscriber
@@ -46,7 +49,8 @@ class HTTPSubscriber:
             await msg.ack()  # Returns 200 to webhook sender
     """
 
-    def __init__(self) -> None:
+    def __init__(self, config: HTTPSubscriberConfig | None = None) -> None:
+        self._config = config or HTTPSubscriberConfig()
         self._queues: dict[str, asyncio.Queue[_PendingMessage]] = {}
         self._closed = False
         self._app = Starlette(
@@ -69,12 +73,13 @@ class HTTPSubscriber:
         """Handle incoming webhook POST request."""
         topic = request.path_params["topic"]
         payload = await request.body()
+        headers = dict(request.headers)
 
         # Create message with metadata from headers
         message = Message(
             payload=payload,
-            metadata=extract_metadata(dict(request.headers)),
-            uuid=extract_uuid(dict(request.headers)),
+            metadata=extract_metadata(headers, self._config.metadata_header),
+            uuid=extract_uuid(headers, self._config.uuid_header),
         )
 
         pending = _PendingMessage(message=message)

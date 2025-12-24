@@ -1,6 +1,7 @@
 """Tests for HTTPSubscriber."""
 
 import asyncio
+import json
 from http import HTTPStatus
 from uuid import UUID
 
@@ -59,13 +60,11 @@ async def test_subscribe_extracts_metadata() -> None:
         transport=httpx.ASGITransport(app=subscriber.app),
         base_url="http://test",
     ) as client:
+        metadata = {"trace-id": "abc123", "source": "test"}
         response = await client.post(
             "/events",
             content=b"data",
-            headers={
-                "X-Natricine-Meta-trace-id": "abc123",
-                "X-Natricine-Meta-source": "test",
-            },
+            headers={"Message-Metadata": json.dumps(metadata)},
         )
         assert response.status_code == HTTPStatus.OK
 
@@ -101,7 +100,7 @@ async def test_subscribe_extracts_uuid() -> None:
         response = await client.post(
             "/events",
             content=b"data",
-            headers={"X-Natricine-UUID": test_uuid},
+            headers={"Message-Uuid": test_uuid},
         )
         assert response.status_code == HTTPStatus.OK
 

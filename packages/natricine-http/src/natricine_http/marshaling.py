@@ -1,38 +1,48 @@
-"""HTTP message marshaling utilities."""
+"""HTTP message marshaling utilities.
 
+Compatible with watermill-http default format.
+"""
+
+import json
 from collections.abc import Mapping
 from uuid import UUID, uuid4
 
-# Header prefixes
-UUID_HEADER = "X-Natricine-UUID"
-META_PREFIX = "X-Natricine-Meta-"
+# Default header names - matches watermill-http
+DEFAULT_UUID_HEADER = "Message-Uuid"
+DEFAULT_METADATA_HEADER = "Message-Metadata"
 
 
-def extract_metadata(headers: Mapping[str, str]) -> dict[str, str]:
-    """Extract natricine metadata from HTTP headers.
+def extract_metadata(
+    headers: Mapping[str, str],
+    metadata_header: str = DEFAULT_METADATA_HEADER,
+) -> dict[str, str]:
+    """Extract metadata from HTTP headers.
 
-    Headers with prefix X-Natricine-Meta- are converted to metadata entries.
+    Metadata is stored as a JSON object in a single header (watermill-compatible).
     """
-    result: dict[str, str] = {}
     for key, value in headers.items():
-        # Case-insensitive prefix match
-        if key.lower().startswith(META_PREFIX.lower()):
-            meta_key = key[len(META_PREFIX) :]
-            result[meta_key] = value
-    return result
+        if key.lower() == metadata_header.lower():
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+    return {}
 
 
-def extract_uuid(headers: Mapping[str, str]) -> UUID:
+def extract_uuid(
+    headers: Mapping[str, str],
+    uuid_header: str = DEFAULT_UUID_HEADER,
+) -> UUID:
     """Extract message UUID from HTTP headers.
 
     Falls back to generating a new UUID if not present.
     """
     for key, value in headers.items():
-        if key.lower() == UUID_HEADER.lower():
+        if key.lower() == uuid_header.lower():
             return UUID(value)
     return uuid4()
 
 
-def metadata_to_headers(metadata: dict[str, str]) -> dict[str, str]:
-    """Convert metadata dict to HTTP headers."""
-    return {f"{META_PREFIX}{k}": v for k, v in metadata.items()}
+def metadata_to_header(metadata: dict[str, str]) -> str:
+    """Convert metadata dict to JSON string for header."""
+    return json.dumps(metadata) if metadata else "{}"
