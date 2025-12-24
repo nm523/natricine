@@ -9,7 +9,7 @@ import uuid
 import pytest
 
 from natricine.pubsub import Message
-from natricine.redisstream import RedisStreamPublisher, RedisStreamSubscriber
+from natricine.backends.redis import RedisStreamPublisher, RedisStreamSubscriber
 
 pytestmark = pytest.mark.anyio
 

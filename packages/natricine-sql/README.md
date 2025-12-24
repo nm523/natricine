@@ -20,7 +20,7 @@ pip install natricine-sql[sqlite]
 import asyncio
 import aiosqlite
 from natricine.pubsub import Message
-from natricine.sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
+from natricine.backends.sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
 
 async def main():
     conn = await aiosqlite.connect("messages.db")
@@ -50,7 +50,7 @@ asyncio.run(main())
 import asyncio
 import asyncpg
 from natricine.pubsub import Message
-from natricine.sql import SQLConfig, PostgresDialect, SQLPublisher, SQLSubscriber
+from natricine.backends.sql import SQLConfig, PostgresDialect, SQLPublisher, SQLSubscriber
 
 async def main():
     pool = await asyncpg.create_pool("postgresql://localhost/mydb")

@@ -67,22 +67,18 @@ asyncio.run(main())
 ## Package Structure
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        natricine                             │  ← Core package
-│  pubsub: Message, Publisher, Subscriber, InMemoryPubSub     │
-│  router: Router, Middleware                                  │
-│  cqrs: CommandBus, EventBus                                  │
-└─────────────────────────────────────────────────────────────┘
+natricine                     # Core package
+├── pubsub                    # Message, Publisher, Subscriber, InMemoryPubSub
+├── router                    # Router, Middleware
+└── cqrs                      # CommandBus, EventBus
 
-Backends (install separately):
-┌─────────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ natricine-redisstream│ │ natricine-aws   │ │ natricine-sql   │
-│ Redis Streams       │ │ SQS/SNS         │ │ PostgreSQL/SQLite│
-└─────────────────────┘ └─────────────────┘ └─────────────────┘
-┌─────────────────────┐ ┌─────────────────┐
-│ natricine-http      │ │ natricine-otel  │
-│ HTTP webhooks       │ │ OpenTelemetry   │
-└─────────────────────┘ └─────────────────┘
+natricine.backends.*          # Backends (install separately)
+├── redis                     # pip install natricine-redisstream
+├── aws                       # pip install natricine-aws
+├── sql                       # pip install natricine-sql
+└── http                      # pip install natricine-http
+
+natricine.otel                # OpenTelemetry (pip install natricine-otel)
 ```
 
 ## Backends
@@ -99,7 +95,7 @@ pubsub = InMemoryPubSub()
 
 ```python
 from redis.asyncio import Redis
-from natricine.redisstream import RedisStreamPublisher, RedisStreamSubscriber
+from natricine.backends.redis import RedisStreamPublisher, RedisStreamSubscriber
 
 redis = Redis.from_url("redis://localhost:6379")
 publisher = RedisStreamPublisher(redis)
@@ -110,7 +106,7 @@ subscriber = RedisStreamSubscriber(redis, group_name="my-app", consumer_name="wo
 
 ```python
 import aioboto3
-from natricine.aws import SQSPublisher, SQSSubscriber, SNSPublisher, SNSSubscriber
+from natricine.backends.aws import SQSPublisher, SQSSubscriber, SNSPublisher, SNSSubscriber
 
 session = aioboto3.Session()
 

@@ -6,7 +6,7 @@ import aiosqlite
 import pytest
 
 from natricine.conformance import PubSubConformance
-from natricine.sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
+from natricine.backends.sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
 
 pytestmark = pytest.mark.anyio
 

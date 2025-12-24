@@ -9,7 +9,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Mount, Route
 
-from natricine.http import HTTPPublisher, HTTPPublisherConfig, HTTPSubscriber
+from natricine.backends.http import HTTPPublisher, HTTPPublisherConfig, HTTPSubscriber
 from natricine.pubsub import Message
 
 

@@ -14,7 +14,7 @@ pip install natricine-redisstream
 import asyncio
 from redis.asyncio import Redis
 from natricine.pubsub import Message
-from natricine.redisstream import RedisStreamPublisher, RedisStreamSubscriber
+from natricine.backends.redis import RedisStreamPublisher, RedisStreamSubscriber
 
 async def main():
     redis = Redis.from_url("redis://localhost:6379")

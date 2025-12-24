@@ -5,7 +5,7 @@ import asyncio
 import aioboto3
 import pytest
 
-from natricine.aws import SQSPublisher, SQSSubscriber
+from natricine.backends.aws import SQSPublisher, SQSSubscriber
 from natricine.pubsub import Message
 
 pytestmark = pytest.mark.anyio

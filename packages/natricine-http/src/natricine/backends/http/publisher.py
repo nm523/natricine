@@ -4,8 +4,8 @@ from types import TracebackType
 
 import httpx
 
-from natricine.http.config import HTTPPublisherConfig
-from natricine.http.marshaling import META_PREFIX, UUID_HEADER
+from natricine.backends.http.config import HTTPPublisherConfig
+from natricine.backends.http.marshaling import META_PREFIX, UUID_HEADER
 from natricine.pubsub import Message
 
 

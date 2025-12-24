@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 import aioboto3
 
-from natricine.aws.config import SQSConfig
-from natricine.aws.marshaling import (
+from natricine.backends.aws.config import SQSConfig
+from natricine.backends.aws.marshaling import (
     encode_message_body,
     from_sqs_message,
     to_message_attributes,

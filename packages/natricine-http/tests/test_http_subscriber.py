@@ -7,7 +7,7 @@ from uuid import UUID
 import httpx
 import pytest
 
-from natricine.http import HTTPSubscriber
+from natricine.backends.http import HTTPSubscriber
 
 
 @pytest.mark.anyio

@@ -22,7 +22,7 @@ except ImportError:
 
 from natricine.conformance import PubSubConformance
 from natricine.pubsub import Message
-from natricine.sql import PostgresDialect, SQLConfig, SQLPublisher, SQLSubscriber
+from natricine.backends.sql import PostgresDialect, SQLConfig, SQLPublisher, SQLSubscriber
 
 pytestmark = [
     pytest.mark.anyio,

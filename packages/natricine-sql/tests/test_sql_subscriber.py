@@ -6,7 +6,7 @@ import anyio
 import pytest
 
 from natricine.pubsub import Message
-from natricine.sql import SQLConfig, SQLPublisher, SQLSubscriber
+from natricine.backends.sql import SQLConfig, SQLPublisher, SQLSubscriber
 
 
 @pytest.mark.anyio

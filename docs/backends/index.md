@@ -73,12 +73,12 @@ from natricine.pubsub import InMemoryPubSub
 pubsub = InMemoryPubSub()
 
 # Production (Redis)
-from natricine.redisstream import RedisStreamPublisher, RedisStreamSubscriber
+from natricine.backends.redis import RedisStreamPublisher, RedisStreamSubscriber
 publisher = RedisStreamPublisher(redis)
 subscriber = RedisStreamSubscriber(redis, "myapp", "worker-1")
 
 # Production (SQS)
-from natricine.aws import SQSPublisher, SQSSubscriber
+from natricine.backends.aws import SQSPublisher, SQSSubscriber
 publisher = SQSPublisher(session)
 subscriber = SQSSubscriber(session)
 ```
