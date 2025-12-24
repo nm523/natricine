@@ -61,12 +61,12 @@ asyncio.run(main())
 ## Package Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                        natricine                             │  ← Core package
-│  pubsub: Message, Publisher, Subscriber, InMemoryPubSub     │
+│  pubsub: Message, Publisher, Subscriber, InMemoryPubSub      │
 │  router: Router, Middleware                                  │
 │  cqrs: CommandBus, EventBus                                  │
-└─────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────┘
 
 Backends:
 ┌──────────────────┐ ┌───────────────┐ ┌────────────────┐
