@@ -1,7 +1,8 @@
 [project]
 name = "natricine"
-version = "0.1.0"
+version = "0.1.1"
 description = "Event-driven architecture toolkit for Python"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["anyio>=4.0"]
 
