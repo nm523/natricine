@@ -7,12 +7,9 @@ members = [
     "natricine",
     "natricine-aws",
     "natricine-conformance",
-    "natricine-cqrs",
     "natricine-http",
     "natricine-otel",
-    "natricine-pubsub",
     "natricine-redisstream",
-    "natricine-router",
     "natricine-sql",
 ]
 
@@ -1089,28 +1086,20 @@ name = "natricine"
 version = "0.1.0"
 source = { editable = "packages/natricine" }
 dependencies = [
-    { name = "natricine-cqrs" },
-    { name = "natricine-pubsub" },
-    { name = "natricine-router" },
+    { name = "anyio" },
 ]
 
 [package.optional-dependencies]
 pydantic = [
-    { name = "natricine-cqrs", extra = ["pydantic"] },
-]
-redis = [
-    { name = "natricine-redisstream" },
+    { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "natricine-cqrs", editable = "packages/natricine-cqrs" },
-    { name = "natricine-cqrs", extras = ["pydantic"], marker = "extra == 'pydantic'", editable = "packages/natricine-cqrs" },
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
-    { name = "natricine-redisstream", marker = "extra == 'redis'", editable = "packages/natricine-redisstream" },
-    { name = "natricine-router", editable = "packages/natricine-router" },
+    { name = "anyio", specifier = ">=4.0" },
+    { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.0" },
 ]
-provides-extras = ["redis", "pydantic"]
+provides-extras = ["pydantic"]
 
 [[package]]
 name = "natricine-aws"
@@ -1118,7 +1107,7 @@ version = "0.1.0"
 source = { editable = "packages/natricine-aws" }
 dependencies = [
     { name = "aioboto3" },
-    { name = "natricine-pubsub" },
+    { name = "natricine" },
 ]
 
 [package.optional-dependencies]
@@ -1135,8 +1124,8 @@ types = [
 [package.metadata]
 requires-dist = [
     { name = "aioboto3", specifier = ">=13.0" },
+    { name = "natricine", editable = "packages/natricine" },
     { name = "natricine-conformance", marker = "extra == 'test'", editable = "packages/natricine-conformance" },
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-anyio", marker = "extra == 'test'" },
     { name = "testcontainers", extras = ["localstack"], marker = "extra == 'test'" },
@@ -1150,7 +1139,7 @@ version = "0.1.0"
 source = { editable = "packages/natricine-conformance" }
 dependencies = [
     { name = "anyio" },
-    { name = "natricine-pubsub" },
+    { name = "natricine" },
     { name = "pytest" },
     { name = "pytest-anyio" },
 ]
@@ -1158,32 +1147,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "anyio", specifier = ">=4.0" },
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+    { name = "natricine", editable = "packages/natricine" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "pytest-anyio", specifier = ">=0.0.0" },
 ]
-
-[[package]]
-name = "natricine-cqrs"
-version = "0.1.0"
-source = { editable = "packages/natricine-cqrs" }
-dependencies = [
-    { name = "anyio" },
-    { name = "natricine-pubsub" },
-]
-
-[package.optional-dependencies]
-pydantic = [
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "anyio", specifier = ">=4.0" },
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
-    { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.0" },
-]
-provides-extras = ["pydantic"]
 
 [[package]]
 name = "natricine-http"
@@ -1191,7 +1158,7 @@ version = "0.1.0"
 source = { editable = "packages/natricine-http" }
 dependencies = [
     { name = "httpx" },
-    { name = "natricine-pubsub" },
+    { name = "natricine" },
     { name = "starlette" },
 ]
 
@@ -1208,7 +1175,7 @@ requires-dist = [
     { name = "fastapi", marker = "extra == 'test'", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'test'" },
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+    { name = "natricine", editable = "packages/natricine" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-anyio", marker = "extra == 'test'" },
     { name = "starlette", specifier = ">=0.38" },
@@ -1220,7 +1187,7 @@ name = "natricine-otel"
 version = "0.1.0"
 source = { editable = "packages/natricine-otel" }
 dependencies = [
-    { name = "natricine-router" },
+    { name = "natricine" },
     { name = "opentelemetry-api" },
 ]
 
@@ -1233,7 +1200,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "natricine-router", editable = "packages/natricine-router" },
+    { name = "natricine", editable = "packages/natricine" },
     { name = "opentelemetry-api", specifier = ">=1.20" },
     { name = "opentelemetry-sdk", marker = "extra == 'test'", specifier = ">=1.20" },
     { name = "pytest", marker = "extra == 'test'" },
@@ -1242,22 +1209,11 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "natricine-pubsub"
-version = "0.1.0"
-source = { editable = "packages/natricine-pubsub" }
-dependencies = [
-    { name = "anyio" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "anyio", specifier = ">=4.0" }]
-
-[[package]]
 name = "natricine-redisstream"
 version = "0.1.0"
 source = { editable = "packages/natricine-redisstream" }
 dependencies = [
-    { name = "natricine-pubsub" },
+    { name = "natricine" },
     { name = "redis" },
 ]
 
@@ -1270,7 +1226,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
+    { name = "natricine", editable = "packages/natricine" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-anyio", marker = "extra == 'test'" },
     { name = "redis", specifier = ">=5.0" },
@@ -1279,27 +1235,12 @@ requires-dist = [
 provides-extras = ["test"]
 
 [[package]]
-name = "natricine-router"
-version = "0.1.0"
-source = { editable = "packages/natricine-router" }
-dependencies = [
-    { name = "anyio" },
-    { name = "natricine-pubsub" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "anyio", specifier = ">=4.0" },
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
-]
-
-[[package]]
 name = "natricine-sql"
 version = "0.1.0"
 source = { editable = "packages/natricine-sql" }
 dependencies = [
     { name = "anyio" },
-    { name = "natricine-pubsub" },
+    { name = "natricine" },
 ]
 
 [package.optional-dependencies]
@@ -1327,8 +1268,8 @@ requires-dist = [
     { name = "anyio", specifier = ">=4.0" },
     { name = "asyncpg", marker = "extra == 'postgres'", specifier = ">=0.29" },
     { name = "asyncpg", marker = "extra == 'test-postgres'", specifier = ">=0.29" },
+    { name = "natricine", editable = "packages/natricine" },
     { name = "natricine-conformance", marker = "extra == 'test'", editable = "packages/natricine-conformance" },
-    { name = "natricine-pubsub", editable = "packages/natricine-pubsub" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-anyio", marker = "extra == 'test'" },
     { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test-postgres'" },

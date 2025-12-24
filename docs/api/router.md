@@ -1,11 +1,11 @@
-# natricine-router
+# natricine.router
 
 Message routing with handler registration and middleware.
 
 ## Installation
 
 ```bash
-pip install natricine-router
+pip install natricine
 ```
 
 ## Router

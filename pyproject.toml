@@ -3,9 +3,6 @@ members = ["packages/*"]
 
 [tool.uv.sources]
 natricine = { workspace = true }
-natricine-pubsub = { workspace = true }
-natricine-router = { workspace = true }
-natricine-cqrs = { workspace = true }
 natricine-redisstream = { workspace = true }
 natricine-conformance = { workspace = true }
 natricine-aws = { workspace = true }
@@ -53,9 +50,7 @@ testpaths = ["tests", "packages/*/tests"]
 
 [tool.ty.environment]
 extra-paths = [
-    "packages/natricine-pubsub/src",
-    "packages/natricine-router/src",
-    "packages/natricine-cqrs/src",
+    "packages/natricine/src",
     "packages/natricine-redisstream/src",
     "packages/natricine-conformance/src",
     "packages/natricine-aws/src",

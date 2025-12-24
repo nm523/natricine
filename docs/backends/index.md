@@ -6,7 +6,7 @@ Natricine supports multiple message backends through its Protocol-based architec
 
 | Backend | Package | Description |
 |---------|---------|-------------|
-| [In-Memory](memory.md) | `natricine-pubsub` | Built-in, no external dependencies |
+| [In-Memory](memory.md) | `natricine` | Built-in, no external dependencies |
 | [Redis Streams](redis.md) | `natricine-redisstream` | Low-latency with consumer groups |
 | [AWS SQS/SNS](aws.md) | `natricine-aws` | Managed AWS messaging services |
 | [SQL](sql.md) | `natricine-sql` | PostgreSQL and SQLite with polling |

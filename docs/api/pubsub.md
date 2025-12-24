@@ -1,11 +1,11 @@
-# natricine-pubsub
+# natricine.pubsub
 
 Core pub/sub abstractions and in-memory implementation.
 
 ## Installation
 
 ```bash
-pip install natricine-pubsub
+pip install natricine
 ```
 
 ## Message

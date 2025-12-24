@@ -2,7 +2,7 @@
 name = "natricine-otel"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["natricine-router", "opentelemetry-api>=1.20"]
+dependencies = ["natricine", "opentelemetry-api>=1.20"]
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-anyio", "opentelemetry-sdk>=1.20"]

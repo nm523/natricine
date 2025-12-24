@@ -61,24 +61,22 @@ asyncio.run(main())
 ## Package Architecture
 
 ```
-                    ┌─────────────────┐
-                    │    natricine    │  ← Meta-package
-                    └────────┬────────┘
-         ┌──────────────────┼──────────────────┐
-         ▼                  ▼                  ▼
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ natricine-cqrs  │ │ natricine-router│ │ natricine-pubsub│
-│ CommandBus      │ │ Router          │ │ Message         │
-│ EventBus        │ │ Middleware      │ │ Publisher       │
-└────────┬────────┘ └────────┬────────┘ │ Subscriber      │
-         └───────────────────┴──────────│ InMemoryPubSub  │
-                                        └─────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        natricine                             │  ← Core package
+│  pubsub: Message, Publisher, Subscriber, InMemoryPubSub     │
+│  router: Router, Middleware                                  │
+│  cqrs: CommandBus, EventBus                                  │
+└─────────────────────────────────────────────────────────────┘
 
 Backends:
-┌──────────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│natricine-redis   │ │ natricine-aws │ │ natricine-sql │ │ natricine-otel│
-│Redis Streams     │ │ SQS/SNS       │ │ Postgres/SQLite│ │ OpenTelemetry │
-└──────────────────┘ └───────────────┘ └───────────────┘ └───────────────┘
+┌──────────────────┐ ┌───────────────┐ ┌───────────────┐
+│natricine-redis   │ │ natricine-aws │ │ natricine-sql │
+│Redis Streams     │ │ SQS/SNS       │ │ Postgres/SQLite│
+└──────────────────┘ └───────────────┘ └───────────────┘
+┌──────────────────┐ ┌───────────────┐
+│natricine-http    │ │ natricine-otel│
+│HTTP webhooks     │ │ OpenTelemetry │
+└──────────────────┘ └───────────────┘
 ```
 
 ## Next Steps

@@ -1,11 +1,11 @@
-# natricine-cqrs
+# natricine.cqrs
 
 CQRS pattern with command and event buses.
 
 ## Installation
 
 ```bash
-pip install natricine-cqrs
+pip install natricine
 ```
 
 ## CommandBus

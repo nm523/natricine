@@ -2,7 +2,7 @@
 name = "natricine-sql"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["natricine-pubsub", "anyio>=4.0"]
+dependencies = ["natricine", "anyio>=4.0"]
 
 [project.optional-dependencies]
 postgres = ["asyncpg>=0.29"]

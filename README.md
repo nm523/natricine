@@ -10,6 +10,8 @@ pip install natricine
 # Backends
 pip install natricine-redisstream    # Redis Streams
 pip install natricine-aws            # AWS SNS/SQS
+pip install natricine-sql            # PostgreSQL/SQLite
+pip install natricine-http           # HTTP webhooks
 pip install natricine-otel           # OpenTelemetry tracing/metrics
 ```
 
@@ -65,29 +67,22 @@ asyncio.run(main())
 ## Package Structure
 
 ```
-                    ┌─────────────────┐
-                    │    natricine    │  ← Meta-package (install this)
-                    └────────┬────────┘
-         ┌──────────────────┼──────────────────┐
-         ▼                  ▼                  ▼
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ natricine-cqrs  │ │ natricine-router│ │ natricine-pubsub│
-│ CommandBus      │ │ Router          │ │ Message         │
-│ EventBus        │ │ Middleware      │ │ Publisher       │
-└────────┬────────┘ └────────┬────────┘ │ Subscriber      │
-         └───────────────────┴──────────│ InMemoryPubSub  │
-                                        └─────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        natricine                             │  ← Core package
+│  pubsub: Message, Publisher, Subscriber, InMemoryPubSub     │
+│  router: Router, Middleware                                  │
+│  cqrs: CommandBus, EventBus                                  │
+└─────────────────────────────────────────────────────────────┘
 
 Backends (install separately):
 ┌─────────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ natricine-redisstream│ │ natricine-aws   │ │ natricine-otel  │
-│ Redis Streams       │ │ SQS/SNS         │ │ OpenTelemetry   │
+│ natricine-redisstream│ │ natricine-aws   │ │ natricine-sql   │
+│ Redis Streams       │ │ SQS/SNS         │ │ PostgreSQL/SQLite│
 └─────────────────────┘ └─────────────────┘ └─────────────────┘
-
-Testing:
-┌─────────────────────┐
-│natricine-conformance│  ← Test suite for backends
-└─────────────────────┘
+┌─────────────────────┐ ┌─────────────────┐
+│ natricine-http      │ │ natricine-otel  │
+│ HTTP webhooks       │ │ OpenTelemetry   │
+└─────────────────────┘ └─────────────────┘
 ```
 
 ## Backends

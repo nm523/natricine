@@ -1,0 +1,49 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'natricine-v*'
+      - 'natricine-aws-v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse tag
+        id: parse
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          if [[ "$TAG" == natricine-aws-* ]]; then
+            PACKAGE="natricine-aws"
+            VERSION="${TAG#natricine-aws-v}"
+          else
+            PACKAGE="natricine"
+            VERSION="${TAG#natricine-v}"
+          fi
+          echo "package=$PACKAGE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Verify version matches
+        run: |
+          cd packages/${{ steps.parse.outputs.package }}
+          TOML_VERSION=$(grep '^version' pyproject.toml | sed 's/.*= *"\(.*\)"/\1/')
+          if [ "$TOML_VERSION" != "${{ steps.parse.outputs.version }}" ]; then
+            echo "Version mismatch: tag=${{ steps.parse.outputs.version }}, pyproject.toml=$TOML_VERSION"
+            exit 1
+          fi
+
+      - name: Build package
+        run: uv build packages/${{ steps.parse.outputs.package }}
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

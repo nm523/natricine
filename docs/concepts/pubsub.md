@@ -122,7 +122,7 @@ for i in range(100):
 
 | Backend | Package | Semantics |
 |---------|---------|-----------|
-| In-Memory | `natricine-pubsub` | Fan-out |
+| In-Memory | `natricine` | Fan-out |
 | Redis Streams | `natricine-redisstream` | Competing consumers |
 | AWS SQS | `natricine-aws` | Competing consumers |
 | AWS SNS+SQS | `natricine-aws` | Fan-out per consumer group |

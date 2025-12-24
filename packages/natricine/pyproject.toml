@@ -3,19 +3,14 @@ name = "natricine"
 version = "0.1.0"
 description = "Event-driven architecture toolkit for Python"
 requires-python = ">=3.11"
-dependencies = [
-    "natricine-pubsub",
-    "natricine-router",
-    "natricine-cqrs",
-]
+dependencies = ["anyio>=4.0"]
 
 [project.optional-dependencies]
-redis = ["natricine-redisstream"]
-pydantic = ["natricine-cqrs[pydantic]"]
+pydantic = ["pydantic>=2.0"]
 
 [build-system]
 requires = ["uv_build>=0.9.11,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "natricine.core"
+module-name = "natricine"
