@@ -3,8 +3,8 @@
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind, Status, StatusCode, TracerProvider
 
-from natricine.otel.propagation import inject_context
 from natricine.pubsub import Message, Publisher
+from natricine_otel.propagation import inject_context
 
 
 class TracingPublisher:

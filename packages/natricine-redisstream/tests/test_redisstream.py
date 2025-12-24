@@ -11,7 +11,7 @@ from natricine_redis import RedisStreamPublisher, RedisStreamSubscriber
 
 from natricine.pubsub import Message
 
-pytestmark = pytest.mark.anyio
+pytestmark = [pytest.mark.anyio, pytest.mark.containers]
 
 MESSAGES_PER_CONSUMER = 2
 EXPECTED_THREE_MESSAGES = 3

@@ -7,9 +7,9 @@ from typing import Any
 from opentelemetry import metrics
 from opentelemetry.metrics import MeterProvider
 
-from natricine.otel.propagation import inject_context
 from natricine.pubsub import Message, Publisher
 from natricine.router import HandlerFunc, Middleware
+from natricine_otel.propagation import inject_context
 
 
 def metrics_middleware(

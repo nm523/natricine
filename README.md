@@ -12,7 +12,7 @@ pip install natricine-redisstream    # Redis Streams
 pip install natricine-aws            # AWS SNS/SQS
 pip install natricine-sql            # PostgreSQL/SQLite
 pip install natricine-http           # HTTP webhooks
-pip install natricine-otel           # OpenTelemetry tracing/metrics
+pip install natricine_otel           # OpenTelemetry tracing/metrics
 ```
 
 ## Quick Start
@@ -76,7 +76,7 @@ natricine_redis               # pip install natricine-redisstream
 natricine_aws                 # pip install natricine-aws
 natricine_sql                 # pip install natricine-sql
 natricine_http                # pip install natricine-http
-natricine_otel                # pip install natricine-otel
+natricine_otel                # pip install natricine_otel
 ```
 
 ## Backends

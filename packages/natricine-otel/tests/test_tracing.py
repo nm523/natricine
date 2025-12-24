@@ -3,17 +3,17 @@
 import asyncio
 
 import pytest
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-from opentelemetry.trace import SpanKind
-
-from natricine.otel import (
+from natricine_otel import (
     TracingMiddleware,
     TracingPublisher,
     extract_context,
     inject_context,
     tracing,
 )
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import SpanKind
+
 from natricine.pubsub import InMemoryPubSub, Message
 
 pytestmark = pytest.mark.anyio

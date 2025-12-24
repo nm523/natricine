@@ -1,8 +1,8 @@
 """Conformance tests for InMemoryPubSub."""
 
 import pytest
+from natricine_conformance import PubSubConformance
 
-from natricine.conformance import PubSubConformance
 from natricine.pubsub import InMemoryPubSub
 
 

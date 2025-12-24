@@ -5,9 +5,9 @@ from collections.abc import Callable
 from opentelemetry import trace
 from opentelemetry.trace import SpanKind, Status, StatusCode, TracerProvider
 
-from natricine.otel.propagation import extract_context
 from natricine.pubsub import Message
 from natricine.router.types import HandlerFunc, Middleware
+from natricine_otel.propagation import extract_context
 
 
 def tracing(

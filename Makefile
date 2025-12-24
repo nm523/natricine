@@ -31,7 +31,11 @@ typecheck: ## Type check with ty
 	uv run ty check packages/
 
 .PHONY: test
-test: ## Run tests
+test: ## Run tests (use 'make test-all' to include container tests)
+	uv run pytest -m "not containers"
+
+.PHONY: test-all
+test-all: ## Run all tests including container-based tests
 	uv run pytest
 
 .PHONY: test-v

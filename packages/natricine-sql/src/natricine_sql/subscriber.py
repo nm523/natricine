@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import AsyncIterator, Sequence
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import anyio
 
@@ -154,10 +154,11 @@ class SQLSubscriber:
                     payload = payload.encode()
 
                 # Create and yield message
+                msg_uuid = UUID(uuid_str) if uuid_str else uuid4()
                 message = Message(
                     payload=payload,
                     metadata=metadata,
-                    uuid=UUID(uuid_str) if uuid_str else None,
+                    uuid=msg_uuid,
                     _ack_func=make_ack,
                     _nack_func=make_nack,
                 )

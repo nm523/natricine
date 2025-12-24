@@ -8,7 +8,7 @@ import uuid
 import pytest
 
 try:
-    from natricine.conformance import PubSubConformance
+    from natricine_conformance import PubSubConformance
 
     CONFORMANCE_AVAILABLE = True
 except ImportError:
@@ -18,10 +18,13 @@ except ImportError:
 from natricine_aws import SQSPublisher, SQSSubscriber
 
 # Skip all tests if conformance package not available
-pytestmark = pytest.mark.skipif(
-    not CONFORMANCE_AVAILABLE,
-    reason="natricine-conformance not installed",
-)
+pytestmark = [
+    pytest.mark.containers,
+    pytest.mark.skipif(
+        not CONFORMANCE_AVAILABLE,
+        reason="natricine-conformance not installed",
+    ),
+]
 
 
 class SQSPubSubAdapter:

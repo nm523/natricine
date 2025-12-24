@@ -4,9 +4,8 @@ import uuid
 
 import aiosqlite
 import pytest
+from natricine_conformance import PubSubConformance
 from natricine_sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
-
-from natricine.conformance import PubSubConformance
 
 pytestmark = pytest.mark.anyio
 

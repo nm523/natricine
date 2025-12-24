@@ -13,20 +13,23 @@ import anyio
 import pytest
 
 try:
-    import asyncpg
-    from testcontainers.postgres import PostgresContainer
+    import asyncpg  # type: ignore[import-not-found]
+    from testcontainers.postgres import (
+        PostgresContainer,  # type: ignore[import-not-found]
+    )
 
     HAS_POSTGRES = True
 except ImportError:
     HAS_POSTGRES = False
 
+from natricine_conformance import PubSubConformance
 from natricine_sql import PostgresDialect, SQLConfig, SQLPublisher, SQLSubscriber
 
-from natricine.conformance import PubSubConformance
 from natricine.pubsub import Message
 
 pytestmark = [
     pytest.mark.anyio,
+    pytest.mark.containers,
     pytest.mark.skipif(not HAS_POSTGRES, reason="asyncpg not installed"),
 ]
 

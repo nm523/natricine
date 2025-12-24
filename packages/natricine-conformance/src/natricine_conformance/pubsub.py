@@ -13,7 +13,7 @@ Usage:
 
     2. Create a test file that inherits from the conformance classes:
 
-        from natricine.conformance import PubSubConformance
+        from natricine_conformance import PubSubConformance
 
         class TestMyPubSub(PubSubConformance.Core):
             pass

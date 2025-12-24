@@ -7,13 +7,12 @@ import os
 import uuid
 
 import pytest
+from natricine_conformance import PubSubConformance
 from natricine_redis import RedisStreamPublisher, RedisStreamSubscriber
 from redis.asyncio import Redis
 from testcontainers.redis import RedisContainer
 
-from natricine.conformance import PubSubConformance
-
-pytestmark = pytest.mark.anyio
+pytestmark = [pytest.mark.anyio, pytest.mark.containers]
 
 
 class RedisPubSubAdapter:

@@ -3,11 +3,11 @@
 import asyncio
 
 import pytest
+from natricine_otel import MetricsMiddleware, MetricsPublisher, metrics_middleware
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.util.types import AttributeValue
 
-from natricine.otel import MetricsMiddleware, MetricsPublisher, metrics_middleware
 from natricine.pubsub import InMemoryPubSub, Message
 
 pytestmark = pytest.mark.anyio

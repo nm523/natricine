@@ -1,5 +1,7 @@
 """Test fixtures for natricine-sql."""
 
+from collections.abc import AsyncGenerator
+
 import aiosqlite
 import pytest
 from natricine_sql import SQLConfig, SQLiteDialect, SQLPublisher, SQLSubscriber
@@ -40,7 +42,7 @@ def sql_config() -> SQLConfig:
 @pytest.fixture
 async def sqlite_publisher(
     sqlite_connection, sqlite_dialect, sql_config
-) -> SQLPublisher:
+) -> AsyncGenerator[SQLPublisher, None]:
     """Create a SQLite publisher for testing."""
     async with SQLPublisher(
         sqlite_connection, sqlite_dialect, sql_config
@@ -51,7 +53,7 @@ async def sqlite_publisher(
 @pytest.fixture
 async def sqlite_subscriber(
     sqlite_connection, sqlite_dialect, sql_config
-) -> SQLSubscriber:
+) -> AsyncGenerator[SQLSubscriber, None]:
     """Create a SQLite subscriber for testing."""
     async with SQLSubscriber(
         sqlite_connection, sqlite_dialect, sql_config
