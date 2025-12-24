@@ -1,7 +1,8 @@
 [project]
 name = "natricine-http"
 version = "0.1.0"
-description = "HTTP pub/sub backend for natricine"
+description = "HTTP webhook backend for natricine"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["natricine", "httpx>=0.27", "starlette>=0.38"]
 

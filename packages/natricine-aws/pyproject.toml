@@ -1,6 +1,8 @@
 [project]
 name = "natricine-aws"
 version = "0.1.0"
+description = "AWS SNS/SQS backend for natricine"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = ["natricine", "aioboto3>=13.0"]
 
