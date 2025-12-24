@@ -102,17 +102,22 @@ class SNSPublisher:
 
         for message in messages:
             # Convert message attributes to SNS format
-            sqs_attrs = to_message_attributes(message)
+            sqs_attrs, dedup_id, group_id = to_message_attributes(message)
             sns_attrs = {
                 k: {"DataType": v["DataType"], "StringValue": v["StringValue"]}
                 for k, v in sqs_attrs.items()
             }
 
-            await client.publish(
-                TopicArn=topic_arn,
-                Message=encode_message_body(message.payload),
-                MessageAttributes=sns_attrs,
-            )
+            kwargs: dict = {
+                "TargetArn": topic_arn,
+                "Message": encode_message_body(message.payload),
+                "MessageAttributes": sns_attrs,
+            }
+            if dedup_id:
+                kwargs["MessageDeduplicationId"] = dedup_id
+            if group_id:
+                kwargs["MessageGroupId"] = group_id
+            await client.publish(**kwargs)
 
     async def close(self) -> None:
         """Close the publisher."""

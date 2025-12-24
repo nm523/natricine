@@ -95,11 +95,17 @@ class SQSPublisher:
         queue_url = await self._get_queue_url(topic)
 
         for message in messages:
-            await client.send_message(
-                QueueUrl=queue_url,
-                MessageBody=encode_message_body(message.payload),
-                MessageAttributes=to_message_attributes(message),
-            )
+            attrs, dedup_id, group_id = to_message_attributes(message)
+            kwargs: dict = {
+                "QueueUrl": queue_url,
+                "MessageBody": encode_message_body(message.payload),
+                "MessageAttributes": attrs,
+            }
+            if dedup_id:
+                kwargs["MessageDeduplicationId"] = dedup_id
+            if group_id:
+                kwargs["MessageGroupId"] = group_id
+            await client.send_message(**kwargs)
 
     async def close(self) -> None:
         """Close the publisher."""

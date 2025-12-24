@@ -1,9 +1,12 @@
-"""Message marshaling between natricine Message and SQS/SNS formats."""
+"""Message marshaling between natricine Message and SQS/SNS formats.
+
+Compatible with watermill-aws marshaling format.
+"""
 
 import base64
 import json
 from typing import TYPE_CHECKING, Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from natricine.pubsub import Message
 
@@ -13,9 +16,12 @@ if TYPE_CHECKING:
         MessageTypeDef,
     )
 
-# Attribute keys
-UUID_ATTR = "natricine.uuid"
-METADATA_ATTR = "natricine.metadata"
+# Attribute keys - matches watermill-aws
+UUID_ATTR = "UUID"
+
+# FIFO queue special metadata keys
+MESSAGE_DEDUPLICATION_ID = "MessageDeduplicationId"
+MESSAGE_GROUP_ID = "MessageGroupId"
 
 
 def encode_message_body(payload: bytes) -> str:
@@ -46,8 +52,12 @@ def decode_message_body(body: str, is_base64: bool = False) -> bytes:
 
 def to_message_attributes(
     message: Message,
-) -> dict[str, "MessageAttributeValueTypeDef"]:
-    """Convert natricine Message to SQS message attributes."""
+) -> tuple[dict[str, "MessageAttributeValueTypeDef"], str | None, str | None]:
+    """Convert natricine Message to SQS message attributes.
+
+    Returns (attributes, deduplication_id, group_id).
+    Deduplication/group IDs are extracted for FIFO queue support.
+    """
     attrs: dict[str, MessageAttributeValueTypeDef] = {
         UUID_ATTR: {
             "DataType": "String",
@@ -55,14 +65,24 @@ def to_message_attributes(
         },
     }
 
-    if message.metadata:
-        metadata_attr: MessageAttributeValueTypeDef = {
-            "DataType": "String",
-            "StringValue": json.dumps(message.metadata),
-        }
-        attrs[METADATA_ATTR] = metadata_attr
+    deduplication_id: str | None = None
+    group_id: str | None = None
 
-    return attrs
+    # Each metadata key becomes a separate attribute (watermill-compatible)
+    for key, value in message.metadata.items():
+        if key == MESSAGE_DEDUPLICATION_ID:
+            deduplication_id = value
+            continue
+        if key == MESSAGE_GROUP_ID:
+            group_id = value
+            continue
+        attr: MessageAttributeValueTypeDef = {
+            "DataType": "String",
+            "StringValue": value,
+        }
+        attrs[key] = attr
+
+    return attrs, deduplication_id, group_id
 
 
 def from_sqs_message(
@@ -77,14 +97,16 @@ def from_sqs_message(
     # Extract UUID
     uuid_attr = attrs.get(UUID_ATTR, {})
     uuid_str = uuid_attr.get("StringValue")
-    msg_uuid = UUID(uuid_str) if uuid_str else None
+    msg_uuid = UUID(uuid_str) if uuid_str else uuid4()
 
-    # Extract metadata
+    # Extract metadata from all other attributes (watermill-compatible)
     metadata: dict[str, str] = {}
-    metadata_attr = attrs.get(METADATA_ATTR, {})
-    metadata_str = metadata_attr.get("StringValue")
-    if metadata_str:
-        metadata = json.loads(metadata_str)
+    for key, value in attrs.items():
+        if key == UUID_ATTR:
+            continue
+        str_value = value.get("StringValue")
+        if str_value is not None:
+            metadata[key] = str_value
 
     # Decode body
     payload = decode_message_body(body)
@@ -92,7 +114,7 @@ def from_sqs_message(
     return Message(
         payload=payload,
         metadata=metadata,
-        uuid=msg_uuid or UUID(int=0),
+        uuid=msg_uuid,
         _ack_func=ack_func,
         _nack_func=nack_func,
     )
@@ -131,14 +153,16 @@ def from_sns_sqs_message(
     # Extract UUID from SNS attributes
     uuid_attr = sns_attrs.get(UUID_ATTR, {})
     uuid_str = uuid_attr.get("Value")
-    msg_uuid = UUID(uuid_str) if uuid_str else None
+    msg_uuid = UUID(uuid_str) if uuid_str else uuid4()
 
-    # Extract metadata from SNS attributes
+    # Extract metadata from all other SNS attributes (watermill-compatible)
     metadata: dict[str, str] = {}
-    metadata_attr = sns_attrs.get(METADATA_ATTR, {})
-    metadata_str = metadata_attr.get("Value")
-    if metadata_str:
-        metadata = json.loads(metadata_str)
+    for key, value in sns_attrs.items():
+        if key == UUID_ATTR:
+            continue
+        str_value = value.get("Value")
+        if str_value is not None:
+            metadata[key] = str_value
 
     # Decode body
     payload = decode_message_body(inner_body)
@@ -146,7 +170,7 @@ def from_sns_sqs_message(
     return Message(
         payload=payload,
         metadata=metadata,
-        uuid=msg_uuid or UUID(int=0),
+        uuid=msg_uuid,
         _ack_func=ack_func,
         _nack_func=nack_func,
     )
