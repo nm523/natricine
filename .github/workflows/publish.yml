@@ -31,6 +31,9 @@ jobs:
 
       - uses: astral-sh/setup-uv@v4
 
+      - name: Run checks
+        run: make check
+
       - name: Verify version matches
         run: |
           cd packages/${{ steps.parse.outputs.package }}
