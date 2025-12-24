@@ -5,6 +5,7 @@ on:
     tags:
       - 'natricine-v*'
       - 'natricine-aws-v*'
+      - 'natricine-http-v*'
 
 jobs:
   publish:
@@ -22,6 +23,9 @@ jobs:
           if [[ "$TAG" == natricine-aws-* ]]; then
             PACKAGE="natricine-aws"
             VERSION="${TAG#natricine-aws-v}"
+          elif [[ "$TAG" == natricine-http-* ]]; then
+            PACKAGE="natricine-http"
+            VERSION="${TAG#natricine-http-v}"
           else
             PACKAGE="natricine"
             VERSION="${TAG#natricine-v}"
