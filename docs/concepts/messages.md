@@ -20,7 +20,6 @@ The payload is always **bytes**. This is intentional:
 
 - No implicit serialization magic
 - You control the format (JSON, protobuf, msgpack, etc.)
-- Explicit is better than implicit
 
 ```python
 import json

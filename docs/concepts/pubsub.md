@@ -131,9 +131,9 @@ for i in range(100):
 
 ### Fan-out vs Competing Consumers
 
-**Fan-out**: Every subscriber receives every message. Good for broadcasting events.
+**Fan-out**: Every subscriber receives every message.
 
-**Competing consumers**: Messages are distributed across subscribers in the same group. Good for load balancing work.
+**Competing consumers**: Messages are distributed across subscribers in the same group.
 
 ```python
 # Fan-out (In-Memory, SNS)

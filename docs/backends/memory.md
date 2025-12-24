@@ -1,7 +1,5 @@
 # In-Memory
 
-The built-in `InMemoryPubSub` is perfect for testing and development.
-
 ## Installation
 
 Included in the core package:
@@ -60,7 +58,8 @@ async with pubsub:
 
 ## Testing
 
-InMemoryPubSub is ideal for unit tests:
+InMemoryPubSub is useful for unit tests, with the caveat that its delivery semantics may differ 
+from other implementations:
 
 ```python
 import pytest

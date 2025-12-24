@@ -7,7 +7,7 @@ Natricine supports multiple message backends through its Protocol-based architec
 | Backend | Package | Description |
 |---------|---------|-------------|
 | [In-Memory](memory.md) | `natricine` | Built-in, no external dependencies |
-| [Redis Streams](redis.md) | `natricine-redisstream` | Low-latency with consumer groups |
+| [Redis Streams](redis.md) | `natricine-redisstream` | Redis streams with consumer groups |
 | [AWS SQS/SNS](aws.md) | `natricine-aws` | Managed AWS messaging services |
 | [SQL](sql.md) | `natricine-sql` | PostgreSQL and SQLite with polling |
 
@@ -23,7 +23,6 @@ Natricine supports multiple message backends through its Protocol-based architec
 
 - Persistent message storage
 - Consumer groups for competing consumers
-- Low latency, high throughput
 
 ### AWS SQS/SNS
 
@@ -46,22 +45,6 @@ Natricine supports multiple message backends through its Protocol-based architec
 | AWS SQS | At-least-once | Competing consumers |
 | AWS SNS+SQS | At-least-once | Fan-out per consumer group |
 | SQL | At-least-once | Competing consumers |
-
-### Fan-out vs Competing Consumers
-
-**Fan-out**: Every subscriber receives every message.
-
-```
-Publisher → Topic → Subscriber A (gets all)
-                 → Subscriber B (gets all)
-```
-
-**Competing Consumers**: Messages are distributed (load balanced).
-
-```
-Publisher → Topic → Subscriber A (gets some)
-                 → Subscriber B (gets rest)
-```
 
 ## Swapping Backends
 

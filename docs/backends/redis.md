@@ -1,7 +1,5 @@
 # Redis Streams
 
-Redis Streams backend for production workloads with low latency.
-
 ## Installation
 
 ```bash
@@ -91,7 +89,7 @@ async def handle_create_user(cmd: CreateUser) -> None:
     ...
 ```
 
-## Production Setup
+## Setup
 
 ```python
 import os

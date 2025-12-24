@@ -1,15 +1,6 @@
 # CQRS
 
-Command Query Responsibility Segregation (CQRS) separates read and write operations. Natricine provides `CommandBus` and `EventBus` for this pattern.
-
-## Commands vs Events
-
-| Aspect | Command | Event |
-|--------|---------|-------|
-| Intent | "Do this" | "This happened" |
-| Handlers | Exactly one | Zero or more |
-| Naming | Imperative (`CreateUser`) | Past tense (`UserCreated`) |
-| Example | `PlaceOrder`, `SendEmail` | `OrderPlaced`, `EmailSent` |
+Command Query Responsibility Segregation (CQRS) separates read and write operations. Natricine provides `CommandBus` and `EventBus` for this pattern. [Watermill](https://watermill.io/docs/cqrs/) provides an excellent overview and components for handling this behaviour.
 
 ## Setup
 

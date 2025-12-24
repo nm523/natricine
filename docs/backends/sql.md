@@ -1,7 +1,5 @@
 # SQL (PostgreSQL/SQLite)
 
-SQL-based backend using your existing database infrastructure.
-
 ## Installation
 
 ```bash
@@ -37,8 +35,6 @@ async for msg in subscriber.subscribe("orders"):
 ```
 
 ## SQLite Usage
-
-SQLite is suitable for testing and single-process development:
 
 ```python
 import aiosqlite
@@ -89,7 +85,7 @@ CREATE TABLE natricine_orders (
 
 ## Competing Consumers
 
-PostgreSQL uses `FOR UPDATE SKIP LOCKED` for efficient competing consumers:
+PostgreSQL uses `FOR UPDATE SKIP LOCKED` for competing consumers:
 
 ```python
 # Multiple workers share the load
@@ -154,13 +150,3 @@ command_bus = CommandBus(
     marshaler=PydanticMarshaler(),
 )
 ```
-
-## SQLite Limitations
-
-SQLite lacks `FOR UPDATE SKIP LOCKED`, making it unsuitable for production competing consumers. Use SQLite for:
-
-- Unit tests
-- Single-process development
-- Prototyping
-
-For production workloads with multiple workers, use PostgreSQL.

@@ -6,12 +6,11 @@ A port of [watermill](https://github.com/ThreeDotsLabs/watermill) (Go) to Python
 
 ## Features
 
-- **Async-first** - Built on `anyio` for true async/await support
+- **Async-first** - Built on `anyio` for async/await support
 - **Type-safe** - Full type hints with Protocol-based abstractions
 - **Pluggable backends** - In-memory, Redis Streams, AWS SQS/SNS, PostgreSQL, SQLite
 - **CQRS support** - CommandBus and EventBus with Pydantic marshaling
 - **Middleware** - Retry, timeout, dead-letter queues, OpenTelemetry tracing
-- **FastAPI integration** - Depends-style dependency injection
 
 ## Quick Example
 
