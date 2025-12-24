@@ -6,6 +6,8 @@ on:
       - 'natricine-v*'
       - 'natricine-aws-v*'
       - 'natricine-http-v*'
+      - 'natricine-sql-v*'
+      - 'natricine-redisstream-v*'
 
 jobs:
   publish:
@@ -26,6 +28,12 @@ jobs:
           elif [[ "$TAG" == natricine-http-* ]]; then
             PACKAGE="natricine-http"
             VERSION="${TAG#natricine-http-v}"
+          elif [[ "$TAG" == natricine-sql-* ]]; then
+            PACKAGE="natricine-sql"
+            VERSION="${TAG#natricine-sql-v}"
+          elif [[ "$TAG" == natricine-redisstream-* ]]; then
+            PACKAGE="natricine-redisstream"
+            VERSION="${TAG#natricine-redisstream-v}"
           else
             PACKAGE="natricine"
             VERSION="${TAG#natricine-v}"
