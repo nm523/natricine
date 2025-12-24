@@ -86,6 +86,68 @@ config = SNSConfig(
 subscriber = SNSSubscriber(session, config=config)
 ```
 
+## IAM Permissions
+
+### SQS
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:CreateQueue"
+      ],
+      "Resource": "arn:aws:sqs:*:*:my-queue"
+    }
+  ]
+}
+```
+
+Remove `sqs:CreateQueue` if `create_queue_if_missing=False`.
+
+### SNS+SQS
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish",
+        "sns:CreateTopic",
+        "sns:Subscribe",
+        "sns:ListTopics"
+      ],
+      "Resource": "arn:aws:sns:*:*:user-events"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueUrl",
+        "sqs:GetQueueAttributes",
+        "sqs:CreateQueue",
+        "sqs:SetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:*:*:user-events-*"
+    }
+  ]
+}
+```
+
+Remove `sns:CreateTopic`, `sns:Subscribe`, `sqs:CreateQueue`, `sqs:SetQueueAttributes` if `create_resources=False`.
+
 ## LocalStack Development
 
 For local development without AWS:
