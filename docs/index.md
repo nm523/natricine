@@ -69,14 +69,20 @@ asyncio.run(main())
 └─────────────────────────────────────────────────────────────┘
 
 Backends:
-┌──────────────────┐ ┌───────────────┐ ┌───────────────┐
-│natricine-redis   │ │ natricine-aws │ │ natricine-sql │
+┌──────────────────┐ ┌───────────────┐ ┌────────────────┐
+│natricine-redis   │ │ natricine-aws │ │ natricine-sql  │
 │Redis Streams     │ │ SQS/SNS       │ │ Postgres/SQLite│
-└──────────────────┘ └───────────────┘ └───────────────┘
-┌──────────────────┐ ┌───────────────┐
-│natricine-http    │ │ natricine-otel│
-│HTTP webhooks     │ │ OpenTelemetry │
-└──────────────────┘ └───────────────┘
+└──────────────────┘ └───────────────┘ └────────────────┘
+┌──────────────────┐
+│natricine-http    │
+│HTTP webhooks     │
+└──────────────────┘
+
+Monitoring:
+┌───────────────┐
+│ natricine-otel│
+│ OpenTelemetry │
+└───────────────┘
 ```
 
 ## Next Steps
