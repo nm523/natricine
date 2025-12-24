@@ -4,7 +4,7 @@ import anyio
 import pytest
 
 from natricine.pubsub import InMemoryPubSub, Message
-from natricine.router import Router
+from natricine.router import Router, RouterConfig
 
 pytestmark = pytest.mark.anyio
 
@@ -82,7 +82,7 @@ class TestRouterConcurrency:
 
 class TestRouterShutdown:
     async def test_graceful_shutdown(self) -> None:
-        """Router should shut down gracefully."""
+        """Router should shut down gracefully with timeout cancellation."""
         async with InMemoryPubSub() as pubsub:
             handler_started = anyio.Event()
             handler_cancelled = False
@@ -96,7 +96,8 @@ class TestRouterShutdown:
                     handler_cancelled = True
                     raise
 
-            router = Router()
+            # Use short timeout to force cancellation
+            router = Router(config=RouterConfig(close_timeout_s=0.1))
             router.add_no_publisher_handler("long", "topic", pubsub, long_handler)
 
             async def trigger_shutdown() -> None:

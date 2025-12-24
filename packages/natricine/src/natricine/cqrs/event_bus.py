@@ -33,14 +33,18 @@ class EventBus:
         subscriber: Subscriber,
         marshaler: Marshaler,
         topic_prefix: str = "event.",
+        close_timeout_s: float = 30.0,
     ) -> None:
         self._publisher = publisher
         self._subscriber = subscriber
         self._marshaler = marshaler
         self._topic_prefix = topic_prefix
+        self._close_timeout_s = close_timeout_s
         self._handlers: dict[type, list[Handler]] = {}
         self._handler_prefixes: dict[type, str] = {}
         self._running = False
+        self._closing = False
+        self._in_flight = 0
         self._cancel_scope: anyio.CancelScope | None = None
 
     @overload
@@ -119,6 +123,16 @@ class EventBus:
         payload = self._marshaler.marshal(event)
         await self._publisher.publish(topic, Message(payload=payload))
 
+    @property
+    def in_flight(self) -> int:
+        """Number of events currently being processed."""
+        return self._in_flight
+
+    @property
+    def is_closing(self) -> bool:
+        """Whether the bus is in the process of closing."""
+        return self._closing
+
     async def run(self) -> None:
         """Run the event bus, processing events until closed."""
         if self._running:
@@ -126,6 +140,7 @@ class EventBus:
             raise RuntimeError(msg)
 
         self._running = True
+        self._closing = False
         try:
             async with anyio.create_task_group() as tg:
                 self._cancel_scope = tg.cancel_scope
@@ -136,6 +151,7 @@ class EventBus:
                         tg.start_soon(self._run_handler, topic, event_type, handler)
         finally:
             self._running = False
+            self._closing = False
             self._cancel_scope = None
 
     async def _run_handler(
@@ -146,6 +162,12 @@ class EventBus:
     ) -> None:
         """Process events for a single handler."""
         async for msg in self._subscriber.subscribe(topic):
+            # Stop processing new messages if closing
+            if self._closing:
+                await msg.nack()
+                break
+
+            self._in_flight += 1
             try:
                 event = self._marshaler.unmarshal(msg.payload, event_type)
                 await call_with_deps(handler, {_first_param_name(handler): event})
@@ -153,9 +175,26 @@ class EventBus:
             except Exception:
                 await msg.nack()
                 raise
+            finally:
+                self._in_flight -= 1
 
     async def close(self) -> None:
-        """Stop the event bus."""
+        """Stop the event bus gracefully.
+
+        Stops accepting new events and waits for in-flight events to complete.
+        If in-flight events don't complete within close_timeout_s, forces cancellation.
+        """
+        if not self._running:
+            return
+
+        self._closing = True
+
+        # Wait for in-flight events to complete (with timeout)
+        with anyio.move_on_after(self._close_timeout_s):
+            while self._in_flight > 0:
+                await anyio.sleep(0.05)
+
+        # Force cancel if still running
         if self._cancel_scope:
             self._cancel_scope.cancel()
 

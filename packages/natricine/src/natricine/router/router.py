@@ -25,6 +25,8 @@ class Router:
         self._handlers: list[Handler] = []
         self._middlewares: list[Middleware] = []
         self._running = False
+        self._closing = False
+        self._in_flight = 0
         self._cancel_scope: CancelScope | None = None
 
     def add_middleware(self, middleware: Middleware) -> None:
@@ -85,6 +87,7 @@ class Router:
             raise RuntimeError(msg)
 
         self._running = True
+        self._closing = False
         try:
             async with anyio.create_task_group() as tg:
                 self._cancel_scope = tg.cancel_scope
@@ -92,10 +95,36 @@ class Router:
                     tg.start_soon(self._run_handler, handler)
         finally:
             self._running = False
+            self._closing = False
             self._cancel_scope = None
 
+    @property
+    def in_flight(self) -> int:
+        """Number of messages currently being processed."""
+        return self._in_flight
+
+    @property
+    def is_closing(self) -> bool:
+        """Whether the router is in the process of closing."""
+        return self._closing
+
     async def close(self) -> None:
-        """Stop the router gracefully."""
+        """Stop the router gracefully.
+
+        Stops accepting new messages and waits for in-flight messages to complete.
+        If in-flight messages don't complete within timeout, forces cancellation.
+        """
+        if not self._running:
+            return
+
+        self._closing = True
+
+        # Wait for in-flight messages to complete (with timeout)
+        with anyio.move_on_after(self._config.close_timeout_s):
+            while self._in_flight > 0:
+                await anyio.sleep(0.05)
+
+        # Force cancel if still running
         if self._cancel_scope:
             self._cancel_scope.cancel()
 
@@ -109,6 +138,12 @@ class Router:
             wrapped_func = middleware(wrapped_func)
 
         async for msg in handler.subscriber.subscribe(handler.subscribe_topic):
+            # Stop processing new messages if closing
+            if self._closing:
+                await msg.nack()
+                break
+
+            self._in_flight += 1
             try:
                 output_messages = await wrapped_func(msg)
                 await msg.ack()
@@ -120,6 +155,8 @@ class Router:
             except Exception:
                 await msg.nack()
                 raise
+            finally:
+                self._in_flight -= 1
 
     async def __aenter__(self) -> "Router":
         return self

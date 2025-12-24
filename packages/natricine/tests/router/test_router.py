@@ -4,7 +4,7 @@ import anyio
 import pytest
 
 from natricine.pubsub import InMemoryPubSub, Message
-from natricine.router import Router
+from natricine.router import Router, RouterConfig
 
 pytestmark = pytest.mark.anyio
 
@@ -230,3 +230,148 @@ class TestRouterMiddleware:
                     tg.start_soon(publish)
 
             assert middleware_calls == ["h1"]
+
+
+class TestRouterGracefulShutdown:
+    async def test_in_flight_property(self) -> None:
+        """Router should track in-flight messages."""
+        async with InMemoryPubSub() as pubsub:
+            in_flight_during_handler = 0
+
+            async def handler(msg: Message) -> None:
+                nonlocal in_flight_during_handler
+                in_flight_during_handler = router.in_flight
+                await anyio.sleep(0.01)
+
+            router = Router()
+            router.add_no_publisher_handler(
+                name="test",
+                subscribe_topic="input",
+                subscriber=pubsub,
+                handler_func=handler,
+            )
+
+            async def publish() -> None:
+                await anyio.sleep(0.01)
+                await pubsub.publish("input", Message(payload=b"test"))
+                await anyio.sleep(0.05)
+                await router.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(router.run)
+                    tg.start_soon(publish)
+
+            assert in_flight_during_handler == 1
+            assert router.in_flight == 0
+
+    async def test_graceful_close_waits_for_in_flight(self) -> None:
+        """Router.close() should wait for in-flight messages to complete."""
+        async with InMemoryPubSub() as pubsub:
+            handler_started = anyio.Event()
+            handler_completed = False
+
+            async def slow_handler(msg: Message) -> None:
+                nonlocal handler_completed
+                handler_started.set()
+                await anyio.sleep(0.1)  # Simulate slow processing
+                handler_completed = True
+
+            router = Router(config=RouterConfig(close_timeout_s=5.0))
+            router.add_no_publisher_handler(
+                name="test",
+                subscribe_topic="input",
+                subscriber=pubsub,
+                handler_func=slow_handler,
+            )
+
+            async def publish_and_close() -> None:
+                await anyio.sleep(0.01)
+                await pubsub.publish("input", Message(payload=b"test"))
+                await handler_started.wait()
+                # Close while handler is still processing
+                await router.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(router.run)
+                    tg.start_soon(publish_and_close)
+
+            # Handler should have completed before close() returned
+            assert handler_completed
+
+    async def test_graceful_close_times_out(self) -> None:
+        """Router.close() should force cancel after timeout."""
+        async with InMemoryPubSub() as pubsub:
+            handler_started = anyio.Event()
+            handler_cancelled = False
+
+            async def very_slow_handler(msg: Message) -> None:
+                nonlocal handler_cancelled
+                handler_started.set()
+                try:
+                    await anyio.sleep(10)  # Very slow - should be cancelled
+                except anyio.get_cancelled_exc_class():
+                    handler_cancelled = True
+                    raise
+
+            router = Router(config=RouterConfig(close_timeout_s=0.1))
+            router.add_no_publisher_handler(
+                name="test",
+                subscribe_topic="input",
+                subscriber=pubsub,
+                handler_func=very_slow_handler,
+            )
+
+            async def publish_and_close() -> None:
+                await anyio.sleep(0.01)
+                await pubsub.publish("input", Message(payload=b"test"))
+                await handler_started.wait()
+                await router.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(router.run)
+                    tg.start_soon(publish_and_close)
+
+            assert handler_cancelled
+
+    async def test_is_closing_property(self) -> None:
+        """Router.is_closing should be True during shutdown."""
+        async with InMemoryPubSub() as pubsub:
+            handler_started = anyio.Event()
+            is_closing_during_handler = False
+
+            async def slow_handler(msg: Message) -> None:
+                nonlocal is_closing_during_handler
+                handler_started.set()
+                # Sleep a bit to let close() be called
+                await anyio.sleep(0.05)
+                is_closing_during_handler = router.is_closing
+
+            router = Router(config=RouterConfig(close_timeout_s=1.0))
+            router.add_no_publisher_handler(
+                name="test",
+                subscribe_topic="input",
+                subscriber=pubsub,
+                handler_func=slow_handler,
+            )
+
+            async def publish_and_close() -> None:
+                await anyio.sleep(0.01)
+                await pubsub.publish("input", Message(payload=b"test"))
+                await handler_started.wait()
+                # Close while handler is processing
+                await router.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(router.run)
+                    tg.start_soon(publish_and_close)
+
+            assert is_closing_during_handler
+
+    async def test_close_without_running_is_noop(self) -> None:
+        """Calling close() when not running should do nothing."""
+        router = Router()
+        await router.close()  # Should not raise
