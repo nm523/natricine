@@ -1200,7 +1200,7 @@ wheels = [
 
 [[package]]
 name = "natricine"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "packages/natricine" }
 dependencies = [
     { name = "anyio" },
@@ -1369,7 +1369,7 @@ provides-extras = ["test"]
 
 [[package]]
 name = "natricine-redisstream"
-version = "0.1.1"
+version = "0.2.0"
 source = { editable = "packages/natricine-redisstream" }
 dependencies = [
     { name = "msgpack" },

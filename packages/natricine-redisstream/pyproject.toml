@@ -1,6 +1,6 @@
 [project]
 name = "natricine-redisstream"
-version = "0.1.1"
+version = "0.2.0"
 description = "Redis Streams backend for natricine"
 readme = "README.md"
 requires-python = ">=3.11"
