@@ -1,5 +1,6 @@
 """Tests for CommandBus."""
 
+import time
 from typing import Annotated
 
 import anyio
@@ -234,6 +235,46 @@ class TestCommandBusSubscriberFactory:
 
             with pytest.raises(ValueError, match="Must provide either"):
                 CommandBus(pubsub, marshaler=marshaler)
+
+
+class TestCommandBusConcurrency:
+    """Tests for concurrent message processing."""
+
+    async def test_messages_processed_concurrently(self) -> None:
+        """Test that multiple messages are processed in parallel."""
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+            bus = CommandBus(pubsub, pubsub, marshaler=marshaler)
+            processing_times: list[float] = []
+            start_time: float = 0
+            num_messages = 3
+            max_concurrent_spread_s = 0.05
+
+            @bus.handler
+            async def slow_handler(cmd: CreateUser) -> None:
+                # Record when we started processing relative to start
+                processing_times.append(time.monotonic() - start_time)
+                await anyio.sleep(0.1)  # Simulate slow processing
+
+            async def send_and_close() -> None:
+                nonlocal start_time
+                await anyio.sleep(0.01)
+                start_time = time.monotonic()
+                for i in range(num_messages):
+                    await bus.send(CreateUser(user_id=i, name=f"User{i}"))
+                await anyio.sleep(0.2)  # Wait for processing
+                await bus.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(bus.run)
+                    tg.start_soon(send_and_close)
+
+            # All messages should have started processing nearly simultaneously
+            # (within max_concurrent_spread_s), not sequentially (0.1s apart)
+            assert len(processing_times) == num_messages
+            time_spread = max(processing_times) - min(processing_times)
+            assert time_spread < max_concurrent_spread_s
 
 
 class TestCommandBusGenerateTopic:

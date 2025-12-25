@@ -231,22 +231,32 @@ class EventBus:
     ) -> None:
         """Process events for a single handler."""
         subscriber = self._get_subscriber_for_handler(handler)
-        async for msg in subscriber.subscribe(topic):
-            # Stop processing new messages if closing
-            if self._closing:
-                await msg.nack()
-                break
+        async with anyio.create_task_group() as tg:
+            async for msg in subscriber.subscribe(topic):
+                # Stop processing new messages if closing
+                if self._closing:
+                    await msg.nack()
+                    break
 
-            self._in_flight += 1
-            try:
-                event = self._marshaler.unmarshal(msg.payload, event_type)
-                await call_with_deps(handler, {_first_param_name(handler): event})
-                await msg.ack()
-            except Exception:
-                await msg.nack()
-                raise
-            finally:
-                self._in_flight -= 1
+                tg.start_soon(self._process_message, msg, event_type, handler)
+
+    async def _process_message(
+        self,
+        msg: Message,
+        event_type: type,
+        handler: Handler,
+    ) -> None:
+        """Process a single message."""
+        self._in_flight += 1
+        try:
+            event = self._marshaler.unmarshal(msg.payload, event_type)
+            await call_with_deps(handler, {_first_param_name(handler): event})
+            await msg.ack()
+        except Exception:
+            await msg.nack()
+            raise
+        finally:
+            self._in_flight -= 1
 
     async def close(self) -> None:
         """Stop the event bus gracefully.

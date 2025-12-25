@@ -4,21 +4,7 @@
 
 A port of [watermill](https://github.com/ThreeDotsLabs/watermill) (Go) to Python, built with modern async patterns and type safety.
 
-<div class="grid cards" markdown>
-
--   :material-robot: **LLM-Friendly Docs**
-
-    ---
-
-    [llms.txt](/llms.txt) | [llms-full.txt](/llms-full.txt)
-
--   :material-tag: **Current Version**
-
-    ---
-
-    `natricine {{ natricine_version }}`
-
-</div>
+**Current version:** `{{ natricine_version }}` | [llms.txt](/llms.txt) | [llms-full.txt](/llms-full.txt)
 
 ## Features
 
