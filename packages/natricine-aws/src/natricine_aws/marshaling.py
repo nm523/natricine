@@ -16,8 +16,8 @@ if TYPE_CHECKING:
         MessageTypeDef,
     )
 
-# Attribute keys - matches watermill-aws
-UUID_ATTR = "UUID"
+# Attribute key for message UUID
+UUID_ATTR = "_natricine_message_uuid"
 
 # FIFO queue special metadata keys
 MESSAGE_DEDUPLICATION_ID = "MessageDeduplicationId"
@@ -99,7 +99,7 @@ def from_sqs_message(
     uuid_str = uuid_attr.get("StringValue")
     msg_uuid = UUID(uuid_str) if uuid_str else uuid4()
 
-    # Extract metadata from all other attributes (watermill-compatible)
+    # Extract metadata from all other attributes
     metadata: dict[str, str] = {}
     for key, value in attrs.items():
         if key == UUID_ATTR:
@@ -155,7 +155,7 @@ def from_sns_sqs_message(
     uuid_str = uuid_attr.get("Value")
     msg_uuid = UUID(uuid_str) if uuid_str else uuid4()
 
-    # Extract metadata from all other SNS attributes (watermill-compatible)
+    # Extract metadata from all other SNS attributes
     metadata: dict[str, str] = {}
     for key, value in sns_attrs.items():
         if key == UUID_ATTR:
