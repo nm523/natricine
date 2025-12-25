@@ -31,6 +31,8 @@ theme:
 
 plugins:
   - search
+  - macros:
+      module_name: docs/macros
   - llmstxt:
       full_output: llms-full.txt
       markdown_description: |
