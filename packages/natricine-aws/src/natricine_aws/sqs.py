@@ -207,6 +207,9 @@ class SQSSubscriber:
         queue_url = await self._get_queue_url(topic)
 
         while not self._closed:
+            # Note: close() may take up to wait_time_s (default 20s) to take effect
+            # since receive_message blocks. To make close() more responsive, wrap
+            # this call with anyio.move_on_after() and loop on shorter intervals.
             response = await client.receive_message(
                 QueueUrl=queue_url,
                 MaxNumberOfMessages=self._config.max_messages,

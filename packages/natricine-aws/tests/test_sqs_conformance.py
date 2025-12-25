@@ -8,12 +8,13 @@ import uuid
 import pytest
 
 try:
-    from natricine_conformance import PubSubConformance
+    from natricine_conformance import PubSubConformance, PubSubFeatures
 
     CONFORMANCE_AVAILABLE = True
 except ImportError:
     CONFORMANCE_AVAILABLE = False
     PubSubConformance = None  # type: ignore[misc, assignment]
+    PubSubFeatures = None  # type: ignore[misc, assignment]
 
 from natricine_aws import SQSPublisher, SQSSubscriber
 
@@ -74,6 +75,19 @@ async def pubsub(session, endpoint_url):
         yield ps
 
 
+@pytest.fixture
+def features():
+    """Declare SQS capabilities."""
+    return PubSubFeatures(
+        broadcast=False,  # Competing consumers, not broadcast
+        persistent=True,  # Messages survive subscriber disconnect
+        redelivery_on_nack=True,  # Visibility timeout triggers redelivery
+        guaranteed_order=False,  # Standard SQS doesn't guarantee order
+        exactly_once=False,  # At-least-once delivery
+        redelivery_timeout_s=35.0,  # SQS visibility timeout is 30s
+    )
+
+
 if CONFORMANCE_AVAILABLE:
 
     class TestSQSCore(PubSubConformance.Core):
@@ -84,18 +98,10 @@ if CONFORMANCE_AVAILABLE:
     class TestSQSFanOut(PubSubConformance.FanOut):
         """Fan-out conformance tests for SQS.
 
-        SQS queues have competing consumer semantics - each message goes to
-        ONE consumer only. These tests assume broadcast semantics and must
-        be skipped.
+        Skipped: SQS has competing consumer semantics.
         """
 
-        @pytest.mark.skip(reason="SQS has competing consumers, not broadcast")
-        async def test_multiple_subscribers_receive_message(self, pubsub) -> None:
-            pass
-
-        @pytest.mark.skip(reason="SQS has competing consumers, not broadcast")
-        async def test_subscriber_gets_own_message_copy(self, pubsub) -> None:
-            pass
+        pass
 
     class TestSQSAcknowledgment(PubSubConformance.Acknowledgment):
         """Acknowledgment conformance tests for SQS."""
@@ -109,5 +115,15 @@ if CONFORMANCE_AVAILABLE:
 
     class TestSQSRobustness(PubSubConformance.Robustness):
         """Robustness conformance tests for SQS."""
+
+        pass
+
+    class TestSQSConcurrentClose(PubSubConformance.ConcurrentClose):
+        """Concurrent close conformance tests for SQS."""
+
+        pass
+
+    class TestSQSRedelivery(PubSubConformance.Redelivery):
+        """Redelivery conformance tests for SQS."""
 
         pass

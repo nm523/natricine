@@ -7,7 +7,7 @@ import os
 import uuid
 
 import pytest
-from natricine_conformance import PubSubConformance
+from natricine_conformance import PubSubConformance, PubSubFeatures
 from natricine_redis import RedisStreamPublisher, RedisStreamSubscriber
 from redis.asyncio import Redis
 from testcontainers.redis import RedisContainer
@@ -105,6 +105,19 @@ async def pubsub(redis_container):
     await client.aclose()
 
 
+@pytest.fixture
+def features():
+    """Declare RedisStream capabilities."""
+    return PubSubFeatures(
+        broadcast=False,  # Consumer groups distribute, not broadcast
+        persistent=True,  # Messages survive subscriber disconnect
+        redelivery_on_nack=True,  # Pending messages redelivered on next read
+        guaranteed_order=True,  # Stream maintains order
+        exactly_once=False,  # At-least-once delivery
+        redelivery_timeout_s=10.0,  # Allow time for redelivery loop
+    )
+
+
 class TestRedisStreamCore(PubSubConformance.Core):
     """Core conformance tests for RedisStream."""
 
@@ -114,20 +127,10 @@ class TestRedisStreamCore(PubSubConformance.Core):
 class TestRedisStreamFanOut(PubSubConformance.FanOut):
     """Fan-out conformance tests for RedisStream.
 
-    Note: Redis Streams with consumer groups have different fan-out semantics
-    than in-memory pub/sub. Each message goes to ONE consumer in a group,
-    not all consumers. These tests may need adjustment for Redis semantics.
+    Skipped: Redis consumer groups distribute messages, not broadcast.
     """
 
-    # Redis consumer groups distribute messages, not broadcast
-    # Skip fan-out tests that assume broadcast semantics
-    @pytest.mark.skip(reason="Redis consumer groups distribute, not broadcast")
-    async def test_multiple_subscribers_receive_message(self, pubsub) -> None:
-        pass
-
-    @pytest.mark.skip(reason="Redis consumer groups distribute, not broadcast")
-    async def test_subscriber_gets_own_message_copy(self, pubsub) -> None:
-        pass
+    pass
 
 
 class TestRedisStreamAcknowledgment(PubSubConformance.Acknowledgment):
@@ -146,3 +149,24 @@ class TestRedisStreamRobustness(PubSubConformance.Robustness):
     """Robustness conformance tests for RedisStream."""
 
     pass
+
+
+class TestRedisStreamConcurrentClose(PubSubConformance.ConcurrentClose):
+    """Concurrent close conformance tests for RedisStream."""
+
+    pass
+
+
+class TestRedisStreamOrdering(PubSubConformance.Ordering):
+    """Ordering conformance tests for RedisStream."""
+
+    pass
+
+
+class TestRedisStreamRedelivery(PubSubConformance.Redelivery):
+    """Redelivery conformance tests for RedisStream."""
+
+    pass
+
+
+# Persistence tests skipped - requires pubsub_factory fixture

@@ -67,11 +67,26 @@ class RedisStreamSubscriber:
         await self._ensure_group(topic)
 
         while not self._closed:
-            # Read new messages for this consumer
+            # First, check for pending messages (redelivery)
+            pending_response = await self._redis.xreadgroup(
+                groupname=self._group_name,
+                consumername=self._consumer_name,
+                streams={topic: "0"},  # "0" reads pending messages
+                count=self._count,
+                block=0,  # Don't block for pending - check quickly
+            )
+
+            if pending_response:
+                for _stream_name, messages in pending_response:
+                    for message_id, fields in messages:
+                        message = self._parse_message(topic, message_id, fields)
+                        yield message
+
+            # Then read new messages
             response = await self._redis.xreadgroup(
                 groupname=self._group_name,
                 consumername=self._consumer_name,
-                streams={topic: ">"},
+                streams={topic: ">"},  # ">" reads only new messages
                 count=self._count,
                 block=self._block_ms,
             )
