@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import aioboto3
 
 from natricine.pubsub import Message
-from natricine_aws.config import SNSConfig
+from natricine_aws.config import DEFAULT_UUID_ATTR, SNSConfig
 from natricine_aws.marshaling import (
     encode_message_body,
     from_sns_sqs_message,
@@ -29,6 +29,7 @@ class SNSPublisher:
         create_topic_if_missing: bool = True,
         endpoint_url: str | None = None,
         region_name: str = "us-east-1",
+        uuid_attr: str = DEFAULT_UUID_ATTR,
     ) -> None:
         """Initialize the SNS publisher.
 
@@ -39,12 +40,14 @@ class SNSPublisher:
             create_topic_if_missing: Auto-create topic if it doesn't exist.
             endpoint_url: Optional endpoint URL (for localstack).
             region_name: AWS region name.
+            uuid_attr: Attribute key for message UUID.
         """
         self._session = session
         self._topic_arn_resolver = topic_arn_resolver
         self._create_topic_if_missing = create_topic_if_missing
         self._endpoint_url = endpoint_url
         self._region_name = region_name
+        self._uuid_attr = uuid_attr
         self._closed = False
         self._topic_arns: dict[str, str] = {}
         self._client: "SNSClient | None" = None
@@ -102,7 +105,9 @@ class SNSPublisher:
 
         for message in messages:
             # Convert message attributes to SNS format
-            sqs_attrs, dedup_id, group_id = to_message_attributes(message)
+            sqs_attrs, dedup_id, group_id = to_message_attributes(
+                message, uuid_attr=self._uuid_attr
+            )
             sns_attrs = {
                 k: {"DataType": v["DataType"], "StringValue": v["StringValue"]}
                 for k, v in sqs_attrs.items()
@@ -316,6 +321,7 @@ class SNSSubscriber:
                     sqs_msg,
                     ack_func=make_ack,
                     nack_func=make_nack,
+                    uuid_attr=self._config.uuid_attr,
                 )
                 yield message
 

@@ -51,6 +51,7 @@ known-first-party = ["natricine"]
 testpaths = ["tests", "packages/*/tests"]
 markers = [
     "containers: tests that require Docker/testcontainers",
+    "interop: tests for Go/Python wire format compatibility",
 ]
 
 [tool.ty.environment]

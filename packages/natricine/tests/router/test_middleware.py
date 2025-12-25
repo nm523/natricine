@@ -4,7 +4,16 @@ import anyio
 import pytest
 
 from natricine.pubsub import InMemoryPubSub, Message
-from natricine.router import PermanentError, dead_letter_queue, retry, timeout
+from natricine.router import (
+    POISON_HANDLER_KEY,
+    POISON_REASON_KEY,
+    POISON_SUBSCRIBER_KEY,
+    PermanentError,
+    dead_letter_queue,
+    poison_queue,
+    retry,
+    timeout,
+)
 
 pytestmark = pytest.mark.anyio
 
@@ -252,6 +261,133 @@ class TestDeadLetterQueueMiddleware:
             assert attempts == EXPECTED_ATTEMPTS_THREE  # Initial + 2 retries
             assert len(dlq_messages) == 1
             assert dlq_messages[0].metadata["dlq.error"] == "Always fails"
+
+
+class TestPoisonQueueMiddleware:
+    """Tests for watermill-compatible poison queue middleware."""
+
+    async def test_poison_catches_exception(self) -> None:
+        """Poison queue should catch exceptions and publish with watermill keys."""
+        async with InMemoryPubSub() as pubsub:
+            poison_messages: list[Message] = []
+
+            async def collect_poison() -> None:
+                async for msg in pubsub.subscribe("poison.errors"):
+                    poison_messages.append(msg)
+                    await msg.ack()
+                    break
+
+            async def failing_handler(msg: Message) -> None:
+                raise ValueError("Handler failed")
+
+            wrapped = poison_queue(pubsub, "poison.errors")(failing_handler)
+
+            async with anyio.create_task_group() as tg:
+                tg.start_soon(collect_poison)
+                await anyio.sleep(0.01)
+                result = await wrapped(Message(payload=b"test"))
+                await anyio.sleep(0.02)
+                tg.cancel_scope.cancel()
+
+            assert result is None
+            assert len(poison_messages) == 1
+            assert poison_messages[0].payload == b"test"
+            # Watermill-compatible key
+            assert poison_messages[0].metadata[POISON_REASON_KEY] == "Handler failed"
+
+    async def test_poison_includes_handler_and_subscriber(self) -> None:
+        """Poison queue should include handler and subscriber names."""
+        async with InMemoryPubSub() as pubsub:
+            poison_messages: list[Message] = []
+
+            async def collect_poison() -> None:
+                async for msg in pubsub.subscribe("poison.errors"):
+                    poison_messages.append(msg)
+                    await msg.ack()
+                    break
+
+            async def failing_handler(msg: Message) -> None:
+                raise ValueError("Failed")
+
+            wrapped = poison_queue(
+                pubsub,
+                "poison.errors",
+                handler_name="my_handler",
+                subscriber_name="my_subscriber",
+            )(failing_handler)
+
+            async with anyio.create_task_group() as tg:
+                tg.start_soon(collect_poison)
+                await anyio.sleep(0.01)
+                await wrapped(Message(payload=b"test"))
+                await anyio.sleep(0.02)
+                tg.cancel_scope.cancel()
+
+            assert poison_messages[0].metadata[POISON_HANDLER_KEY] == "my_handler"
+            assert poison_messages[0].metadata[POISON_SUBSCRIBER_KEY] == "my_subscriber"
+
+    async def test_poison_preserves_original_metadata(self) -> None:
+        """Poison queue should preserve original message metadata."""
+        async with InMemoryPubSub() as pubsub:
+            poison_messages: list[Message] = []
+
+            async def collect_poison() -> None:
+                async for msg in pubsub.subscribe("poison.errors"):
+                    poison_messages.append(msg)
+                    await msg.ack()
+                    break
+
+            async def failing_handler(msg: Message) -> None:
+                raise ValueError("Failed")
+
+            wrapped = poison_queue(pubsub, "poison.errors")(failing_handler)
+            original = Message(payload=b"test", metadata={"correlation_id": "abc123"})
+
+            async with anyio.create_task_group() as tg:
+                tg.start_soon(collect_poison)
+                await anyio.sleep(0.01)
+                await wrapped(original)
+                await anyio.sleep(0.02)
+                tg.cancel_scope.cancel()
+
+            assert poison_messages[0].metadata["correlation_id"] == "abc123"
+
+    async def test_poison_with_retry_integration(self) -> None:
+        """Poison queue should work with retry middleware."""
+        async with InMemoryPubSub() as pubsub:
+            poison_messages: list[Message] = []
+            attempts = 0
+
+            async def collect_poison() -> None:
+                async for msg in pubsub.subscribe("poison.errors"):
+                    poison_messages.append(msg)
+                    await msg.ack()
+                    break
+
+            async def always_fails(msg: Message) -> None:
+                nonlocal attempts
+                attempts += 1
+                raise ValueError("Always fails")
+
+            # Poison queue wraps retry
+            retry_mw = retry(max_retries=2, delay=0.01, jitter=0)
+            poison_mw = poison_queue(
+                pubsub, "poison.errors", handler_name="always_fails"
+            )
+            wrapped = poison_mw(retry_mw(always_fails))
+
+            async with anyio.create_task_group() as tg:
+                tg.start_soon(collect_poison)
+                await anyio.sleep(0.01)
+                result = await wrapped(Message(payload=b"test"))
+                await anyio.sleep(0.02)
+                tg.cancel_scope.cancel()
+
+            assert result is None
+            assert attempts == EXPECTED_ATTEMPTS_THREE  # Initial + 2 retries
+            assert len(poison_messages) == 1
+            assert poison_messages[0].metadata[POISON_REASON_KEY] == "Always fails"
+            assert poison_messages[0].metadata[POISON_HANDLER_KEY] == "always_fails"
 
 
 class TestTimeoutMiddleware:

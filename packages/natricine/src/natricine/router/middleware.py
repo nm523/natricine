@@ -127,6 +127,90 @@ def timeout(seconds: float) -> Middleware:
     return middleware
 
 
+# Watermill-compatible poison queue metadata keys
+POISON_REASON_KEY = "reason_poisoned"
+POISON_TOPIC_KEY = "topic_poisoned"
+POISON_HANDLER_KEY = "handler_poisoned"
+POISON_SUBSCRIBER_KEY = "subscriber_poisoned"
+
+
+def poison_queue(
+    publisher: Publisher,
+    topic: str,
+    *,
+    handler_name: str = "",
+    subscriber_name: str = "",
+    catch: tuple[type[Exception], ...] = (Exception,),
+    include_traceback: bool = True,
+    on_poison: Callable[[Message, Exception], None] | None = None,
+) -> Middleware:
+    """Middleware that sends failed messages to a poison queue.
+
+    Uses watermill-compatible metadata keys for cross-language interop.
+
+    When an exception occurs (after any retries), the message is published
+    to the poison queue topic with error metadata, and processing continues
+    normally (the original message will be acked, not nacked).
+
+    Should be placed BEFORE retry middleware in the chain:
+        router.add_middleware(poison_queue(pub, "poison.errors"))
+        router.add_middleware(retry(max_retries=3))
+
+    Args:
+        publisher: Publisher to send poison messages to.
+        topic: Topic to publish failed messages to.
+        handler_name: Name of the handler (for metadata).
+        subscriber_name: Name of the subscriber (for metadata).
+        catch: Tuple of exception types to catch and send to poison queue.
+            Defaults to all exceptions.
+        include_traceback: Whether to include traceback in metadata.
+        on_poison: Optional callback called when a message is sent to poison
+            queue with (message, exception).
+    """
+
+    def middleware(next_handler: HandlerFunc) -> HandlerFunc:
+        async def handler(msg: Message) -> list[Message] | None:
+            try:
+                return await next_handler(msg)
+            except catch as e:
+                # Build poison queue metadata (watermill-compatible keys)
+                poison_metadata = {
+                    **msg.metadata,
+                    POISON_REASON_KEY: str(e),
+                }
+
+                # Add optional context
+                if handler_name:
+                    poison_metadata[POISON_HANDLER_KEY] = handler_name
+                if subscriber_name:
+                    poison_metadata[POISON_SUBSCRIBER_KEY] = subscriber_name
+
+                # Include original topic if available
+                original_topic = msg.metadata.get("_topic")
+                if original_topic:
+                    poison_metadata[POISON_TOPIC_KEY] = original_topic
+
+                if include_traceback:
+                    poison_metadata["traceback"] = tb.format_exc()
+
+                poison_msg = Message(
+                    payload=msg.payload,
+                    metadata=poison_metadata,
+                )
+
+                await publisher.publish(topic, poison_msg)
+
+                if on_poison is not None:
+                    on_poison(msg, e)
+
+                # Return normally so the message gets acked
+                return None
+
+        return handler
+
+    return middleware
+
+
 def dead_letter_queue(
     publisher: Publisher,
     topic: str,
@@ -135,6 +219,8 @@ def dead_letter_queue(
     on_dlq: Callable[[Message, Exception], None] | None = None,
 ) -> Middleware:
     """Middleware that sends failed messages to a dead letter queue.
+
+    Note: For watermill-compatible metadata keys, use :func:`poison_queue`.
 
     When an exception occurs (after any retries), the message is published
     to the DLQ topic with error metadata, and processing continues normally

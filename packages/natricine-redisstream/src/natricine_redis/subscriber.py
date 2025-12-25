@@ -3,12 +3,18 @@
 from collections.abc import AsyncIterator
 from uuid import UUID
 
+import msgpack
 from redis.asyncio import Redis
 from redis.exceptions import ResponseError
 
 from natricine.pubsub import Message
 
 CONSUMER_GROUP_EXISTS_ERROR = "BUSYGROUP"
+
+# Default field names (natricine-prefixed for identification)
+DEFAULT_UUID_KEY = "_natricine_message_uuid"
+DEFAULT_PAYLOAD_KEY = "payload"
+DEFAULT_METADATA_KEY = "metadata"
 
 
 class RedisStreamSubscriber:
@@ -21,6 +27,10 @@ class RedisStreamSubscriber:
         consumer_name: str,
         block_ms: int = 5000,
         count: int = 10,
+        *,
+        uuid_key: str = DEFAULT_UUID_KEY,
+        payload_key: str = DEFAULT_PAYLOAD_KEY,
+        metadata_key: str = DEFAULT_METADATA_KEY,
     ) -> None:
         """Initialize the subscriber.
 
@@ -30,12 +40,18 @@ class RedisStreamSubscriber:
             consumer_name: Unique consumer name within the group.
             block_ms: How long to block waiting for messages (milliseconds).
             count: Max messages to read per batch.
+            uuid_key: Field name for message UUID.
+            payload_key: Field name for message payload.
+            metadata_key: Field name for msgpack-encoded metadata.
         """
         self._redis = redis
         self._group_name = group_name
         self._consumer_name = consumer_name
         self._block_ms = block_ms
         self._count = count
+        self._uuid_key = uuid_key
+        self._payload_key = payload_key
+        self._metadata_key = metadata_key
         self._closed = False
 
     def subscribe(self, topic: str) -> AsyncIterator[Message]:
@@ -105,22 +121,26 @@ class RedisStreamSubscriber:
         message_id: bytes,
         fields: dict[bytes, bytes],
     ) -> Message:
-        """Parse Redis stream entry into a Message."""
-        # Decode fields
+        """Parse Redis stream entry into a Message.
+
+        Metadata is msgpack-encoded.
+        """
+        # Decode field keys
         decoded = {k.decode(): v for k, v in fields.items()}
 
-        uuid_raw = decoded.get("uuid", b"")
+        uuid_raw = decoded.get(self._uuid_key, b"")
         uuid_str = uuid_raw.decode() if isinstance(uuid_raw, bytes) else uuid_raw
-        payload = decoded.get("payload", b"")
+        payload = decoded.get(self._payload_key, b"")
         if isinstance(payload, str):
             payload = payload.encode()
 
-        # Extract metadata
-        metadata = {}
-        for key, value in decoded.items():
-            if key.startswith("meta:"):
-                meta_key = key[5:]  # Remove "meta:" prefix
-                metadata[meta_key] = value if isinstance(value, str) else value.decode()
+        # Decode msgpack metadata
+        metadata: dict[str, str] = {}
+        metadata_raw = decoded.get(self._metadata_key)
+        if metadata_raw:
+            unpacked = msgpack.unpackb(metadata_raw, raw=False)
+            if isinstance(unpacked, dict):
+                metadata = {str(k): str(v) for k, v in unpacked.items()}
 
         # Create ack/nack functions bound to this message
         stream_key = topic

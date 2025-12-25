@@ -6,6 +6,7 @@ Set REDIS_URL environment variable or use default localhost:6379.
 
 import uuid
 
+import msgpack
 import pytest
 from natricine_redis import RedisStreamPublisher, RedisStreamSubscriber
 
@@ -26,11 +27,12 @@ class TestRedisStreamPublisher:
             msg = Message(payload=b"hello world")
             await publisher.publish(stream, msg)
 
-        # Verify message was added
+        # Verify message was added with default field names
         messages = await redis_client.xrange(stream)
         assert len(messages) == 1
         _, fields = messages[0]
         assert fields[b"payload"] == b"hello world"
+        assert b"_natricine_message_uuid" in fields
 
     async def test_publish_with_metadata(self, redis_client, clean_stream) -> None:
         stream = clean_stream(f"test:metadata:{uuid.uuid4()}")
@@ -45,8 +47,10 @@ class TestRedisStreamPublisher:
         messages = await redis_client.xrange(stream)
         assert len(messages) == 1
         _, fields = messages[0]
-        assert fields[b"meta:correlation_id"] == b"abc123"
-        assert fields[b"meta:source"] == b"test"
+        # Metadata is stored as msgpack (watermill-compatible)
+        metadata = msgpack.unpackb(fields[b"metadata"], raw=False)
+        assert metadata["correlation_id"] == "abc123"
+        assert metadata["source"] == "test"
 
     async def test_publish_multiple(self, redis_client, clean_stream) -> None:
         stream = clean_stream(f"test:multi:{uuid.uuid4()}")

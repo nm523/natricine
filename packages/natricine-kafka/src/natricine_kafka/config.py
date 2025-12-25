@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass
 
+# Default UUID header key (natricine-prefixed for identification)
+DEFAULT_UUID_HEADER = "_natricine_message_uuid"
+
 
 @dataclass
 class KafkaConfig:
@@ -13,7 +16,7 @@ class KafkaConfig:
     client_id: str = "natricine"
     """Client identifier for Kafka connections."""
 
-    uuid_header: str = "_natricine_message_uuid"
+    uuid_header: str = DEFAULT_UUID_HEADER
     """Header key for message UUID."""
 
 

@@ -95,7 +95,9 @@ class SQSPublisher:
         queue_url = await self._get_queue_url(topic)
 
         for message in messages:
-            attrs, dedup_id, group_id = to_message_attributes(message)
+            attrs, dedup_id, group_id = to_message_attributes(
+                message, uuid_attr=self._config.uuid_attr
+            )
             kwargs: dict = {
                 "QueueUrl": queue_url,
                 "MessageBody": encode_message_body(message.payload),
@@ -243,6 +245,7 @@ class SQSSubscriber:
                     sqs_msg,
                     ack_func=make_ack,
                     nack_func=make_nack,
+                    uuid_attr=self._config.uuid_attr,
                 )
                 yield message
 

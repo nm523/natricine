@@ -16,8 +16,8 @@ if TYPE_CHECKING:
         MessageTypeDef,
     )
 
-# Attribute key for message UUID
-UUID_ATTR = "_natricine_message_uuid"
+# Default UUID attribute key (natricine-prefixed for identification)
+DEFAULT_UUID_ATTR = "_natricine_message_uuid"
 
 # FIFO queue special metadata keys
 MESSAGE_DEDUPLICATION_ID = "MessageDeduplicationId"
@@ -52,6 +52,7 @@ def decode_message_body(body: str, is_base64: bool = False) -> bytes:
 
 def to_message_attributes(
     message: Message,
+    uuid_attr: str = DEFAULT_UUID_ATTR,
 ) -> tuple[dict[str, "MessageAttributeValueTypeDef"], str | None, str | None]:
     """Convert natricine Message to SQS message attributes.
 
@@ -59,7 +60,7 @@ def to_message_attributes(
     Deduplication/group IDs are extracted for FIFO queue support.
     """
     attrs: dict[str, MessageAttributeValueTypeDef] = {
-        UUID_ATTR: {
+        uuid_attr: {
             "DataType": "String",
             "StringValue": str(message.uuid),
         },
@@ -89,20 +90,21 @@ def from_sqs_message(
     sqs_msg: "MessageTypeDef",
     ack_func: Any = None,
     nack_func: Any = None,
+    uuid_attr: str = DEFAULT_UUID_ATTR,
 ) -> Message:
     """Convert SQS message to natricine Message."""
     body = sqs_msg.get("Body", "")
     attrs = sqs_msg.get("MessageAttributes", {})
 
     # Extract UUID
-    uuid_attr = attrs.get(UUID_ATTR, {})
-    uuid_str = uuid_attr.get("StringValue")
+    uuid_attr_value = attrs.get(uuid_attr, {})
+    uuid_str = uuid_attr_value.get("StringValue")
     msg_uuid = UUID(uuid_str) if uuid_str else uuid4()
 
     # Extract metadata from all other attributes
     metadata: dict[str, str] = {}
     for key, value in attrs.items():
-        if key == UUID_ATTR:
+        if key == uuid_attr:
             continue
         str_value = value.get("StringValue")
         if str_value is not None:
@@ -139,6 +141,7 @@ def from_sns_sqs_message(
     sqs_msg: "MessageTypeDef",
     ack_func: Any = None,
     nack_func: Any = None,
+    uuid_attr: str = DEFAULT_UUID_ATTR,
 ) -> Message:
     """Convert SNS-wrapped SQS message to natricine Message.
 
@@ -151,14 +154,14 @@ def from_sns_sqs_message(
     inner_body, sns_attrs = unwrap_sns_envelope(body)
 
     # Extract UUID from SNS attributes
-    uuid_attr = sns_attrs.get(UUID_ATTR, {})
-    uuid_str = uuid_attr.get("Value")
+    uuid_attr_value = sns_attrs.get(uuid_attr, {})
+    uuid_str = uuid_attr_value.get("Value")
     msg_uuid = UUID(uuid_str) if uuid_str else uuid4()
 
     # Extract metadata from all other SNS attributes
     metadata: dict[str, str] = {}
     for key, value in sns_attrs.items():
-        if key == UUID_ATTR:
+        if key == uuid_attr:
             continue
         str_value = value.get("Value")
         if str_value is not None:

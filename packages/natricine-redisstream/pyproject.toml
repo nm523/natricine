@@ -4,7 +4,11 @@ version = "0.1.1"
 description = "Redis Streams backend for natricine"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["natricine", "redis>=5.0"]
+dependencies = [
+    "msgpack>=1.1.2",
+    "natricine",
+    "redis>=5.0",
+]
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-anyio", "testcontainers[redis]"]

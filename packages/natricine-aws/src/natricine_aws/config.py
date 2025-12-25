@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass, field
 
+# Default UUID attribute key (natricine-prefixed for identification)
+DEFAULT_UUID_ATTR = "_natricine_message_uuid"
+
 
 @dataclass
 class SQSConfig:
@@ -19,6 +22,9 @@ class SQSConfig:
     create_queue_if_missing: bool = True
     """Auto-create queue if it doesn't exist."""
 
+    uuid_attr: str = DEFAULT_UUID_ATTR
+    """Attribute key for message UUID."""
+
 
 @dataclass
 class SNSConfig:
@@ -32,3 +38,6 @@ class SNSConfig:
 
     sqs_config: SQSConfig = field(default_factory=SQSConfig)
     """Configuration for the underlying SQS subscriber."""
+
+    uuid_attr: str = DEFAULT_UUID_ATTR
+    """Attribute key for message UUID."""
