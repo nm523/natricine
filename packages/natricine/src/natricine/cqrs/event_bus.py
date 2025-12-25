@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any, ParamSpec, get_type_hints, overload
+from typing import TYPE_CHECKING, Any, ParamSpec, Protocol, get_type_hints, overload
 
 import anyio
 
@@ -20,28 +20,76 @@ P = ParamSpec("P")
 # Type alias for handlers that can be sync or async
 Handler = Callable[..., None] | Callable[..., Awaitable[None]]
 
+# Topic generation callback - receives event name (str), returns topic (str)
+GenerateTopicFn = Callable[[str], str]
+
+
+class SubscriberFactory(Protocol):
+    """Factory that creates a Subscriber for each handler.
+
+    Used for fan-out patterns where each handler needs its own subscription
+    (e.g., separate SQS queues per handler for SNS fan-out).
+    """
+
+    def __call__(self, handler_name: str) -> Subscriber:
+        """Create a subscriber for the given handler.
+
+        Args:
+            handler_name: Name of the handler function.
+
+        Returns:
+            A Subscriber instance configured for this handler.
+        """
+        ...
+
 
 class EventBus:
     """Dispatches events to their handlers.
 
     Each event type can have multiple handlers.
+
+    Args:
+        publisher: Publisher for sending events.
+        subscriber: Shared subscriber for all handlers. Either this or
+            subscriber_factory must be provided.
+        marshaler: Marshaler for serializing/deserializing events.
+        subscriber_factory: Factory that creates a subscriber per handler.
+            Use this for fan-out patterns (e.g., SNS→SQS where each handler
+            needs its own queue). Either this or subscriber must be provided.
+        generate_topic: Custom topic generation function. Receives event name,
+            returns topic string. If not provided, uses topic_prefix + event_name.
+        topic_prefix: Prefix for auto-generated topic names (default: "event.").
+        close_timeout_s: Timeout for graceful shutdown.
     """
 
     def __init__(
         self,
         publisher: Publisher,
-        subscriber: Subscriber,
-        marshaler: Marshaler,
+        subscriber: Subscriber | None = None,
+        marshaler: Marshaler | None = None,
+        *,
+        subscriber_factory: SubscriberFactory | None = None,
+        generate_topic: GenerateTopicFn | None = None,
         topic_prefix: str = "event.",
         close_timeout_s: float = 30.0,
     ) -> None:
+        if subscriber is None and subscriber_factory is None:
+            msg = "Must provide either subscriber or subscriber_factory"
+            raise ValueError(msg)
+        if marshaler is None:
+            msg = "marshaler is required"
+            raise ValueError(msg)
+
         self._publisher = publisher
         self._subscriber = subscriber
+        self._subscriber_factory = subscriber_factory
         self._marshaler = marshaler
+        self._generate_topic = generate_topic
         self._topic_prefix = topic_prefix
         self._close_timeout_s = close_timeout_s
         self._handlers: dict[type, list[Handler]] = {}
         self._handler_prefixes: dict[type, str] = {}
+        self._handler_subscribers: dict[str, Subscriber] = {}  # For factory-created
         self._running = False
         self._closing = False
         self._in_flight = 0
@@ -113,8 +161,12 @@ class EventBus:
 
     def _topic_for_type(self, event_type: type) -> str:
         """Get the topic name for an event type."""
+        event_name = self._marshaler.name(event_type)
+        if self._generate_topic is not None:
+            return self._generate_topic(event_name)
+        # Default: prefix + optional handler prefix + event name
         extra_prefix = self._handler_prefixes.get(event_type, "")
-        return self._topic_prefix + extra_prefix + self._marshaler.name(event_type)
+        return self._topic_prefix + extra_prefix + event_name
 
     async def publish(self, event: Any) -> None:
         """Publish an event to all registered handlers."""
@@ -154,6 +206,23 @@ class EventBus:
             self._closing = False
             self._cancel_scope = None
 
+    def _get_subscriber_for_handler(self, handler: Handler) -> Subscriber:
+        """Get or create subscriber for a handler.
+
+        If subscriber_factory is set, creates a subscriber per handler.
+        Otherwise, uses the shared subscriber.
+        """
+        if self._subscriber_factory is not None:
+            handler_name = getattr(handler, "__name__", repr(handler))
+            if handler_name not in self._handler_subscribers:
+                self._handler_subscribers[handler_name] = self._subscriber_factory(
+                    handler_name
+                )
+            return self._handler_subscribers[handler_name]
+        # subscriber is guaranteed non-None if factory is None (checked in __init__)
+        assert self._subscriber is not None
+        return self._subscriber
+
     async def _run_handler(
         self,
         topic: str,
@@ -161,7 +230,8 @@ class EventBus:
         handler: Handler,
     ) -> None:
         """Process events for a single handler."""
-        async for msg in self._subscriber.subscribe(topic):
+        subscriber = self._get_subscriber_for_handler(handler)
+        async for msg in subscriber.subscribe(topic):
             # Stop processing new messages if closing
             if self._closing:
                 await msg.nack()
@@ -183,6 +253,7 @@ class EventBus:
 
         Stops accepting new events and waits for in-flight events to complete.
         If in-flight events don't complete within close_timeout_s, forces cancellation.
+        Also closes any factory-created subscribers.
         """
         if not self._running:
             return
@@ -197,6 +268,12 @@ class EventBus:
         # Force cancel if still running
         if self._cancel_scope:
             self._cancel_scope.cancel()
+
+        # Close factory-created subscribers
+        for subscriber in self._handler_subscribers.values():
+            if hasattr(subscriber, "close"):
+                await subscriber.close()
+        self._handler_subscribers.clear()
 
 
 def _first_param_name(func: Callable[..., Any]) -> str:

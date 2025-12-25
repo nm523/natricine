@@ -177,3 +177,59 @@ Customize with `topic_prefix`:
 command_bus = CommandBus(..., topic_prefix="myapp.commands.")
 # CreateUser → myapp.commands.CreateUser
 ```
+
+### Custom Topic Generation
+
+For full control over topic naming, use `generate_topic`:
+
+```python
+event_bus = EventBus(
+    publisher=publisher,
+    subscriber=subscriber,
+    marshaler=marshaler,
+    generate_topic=lambda event_name: f"prod.events.{event_name.lower()}",
+)
+# UserCreated → prod.events.usercreated
+```
+
+This is useful for:
+- Environment-specific prefixes (`prod.`, `staging.`)
+- Naming conventions (lowercase, kebab-case, etc.)
+- Monotopic patterns (all events to one topic)
+
+## Subscriber Factory (Fan-Out Pattern)
+
+By default, all handlers share a single subscriber. For fan-out patterns where each handler needs its own subscription (e.g., SNS → SQS), use `subscriber_factory`:
+
+```python
+from natricine_aws import SNSSubscriber
+from natricine_aws.config import SNSConfig
+
+def make_subscriber(handler_name: str) -> SNSSubscriber:
+    """Create a subscriber for each handler with its own SQS queue."""
+    return SNSSubscriber(
+        session=session,
+        config=SNSConfig(consumer_group=f"myapp-{handler_name}"),
+        endpoint_url=LOCALSTACK_ENDPOINT,
+    )
+
+event_bus = EventBus(
+    publisher=publisher,
+    subscriber_factory=make_subscriber,
+    marshaler=marshaler,
+)
+```
+
+With this setup:
+- Each handler gets a unique SQS queue: `event_UserCreated-myapp-on_user_created`
+- Messages are delivered to all handler queues (fan-out)
+- Each handler processes independently
+
+### When to Use Subscriber Factory
+
+| Pattern | Use Case | Configuration |
+|---------|----------|---------------|
+| Shared subscriber | Simple apps, single consumer group | `subscriber=...` |
+| Subscriber factory | Fan-out, independent processing | `subscriber_factory=...` |
+
+**Note:** You must provide either `subscriber` or `subscriber_factory`, but not both.

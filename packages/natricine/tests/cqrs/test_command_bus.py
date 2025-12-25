@@ -7,7 +7,7 @@ import pytest
 from pydantic import BaseModel
 
 from natricine.cqrs import CommandBus, Depends, PydanticMarshaler
-from natricine.pubsub import InMemoryPubSub
+from natricine.pubsub import InMemoryPubSub, Subscriber
 
 pytestmark = pytest.mark.anyio
 
@@ -21,6 +21,11 @@ class CreateUser(BaseModel):
 
 class DeleteUser(BaseModel):
     user_id: int
+
+
+class UpdateUser(BaseModel):
+    user_id: int
+    name: str
 
 
 class TestCommandBus:
@@ -175,3 +180,99 @@ class TestCommandBus:
                 @bus.handler
                 async def bad_handler(cmd) -> None:  # noqa: ANN001
                     pass
+
+
+class TestCommandBusSubscriberFactory:
+    """Tests for subscriber_factory pattern."""
+
+    async def test_factory_creates_subscriber_per_handler(self) -> None:
+        """Test that subscriber_factory is called for each handler."""
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+            created_subscribers: list[str] = []
+
+            def subscriber_factory(handler_name: str) -> Subscriber:
+                created_subscribers.append(handler_name)
+                return pubsub
+
+            bus = CommandBus(
+                pubsub,
+                marshaler=marshaler,
+                subscriber_factory=subscriber_factory,
+            )
+            received_create: list[CreateUser] = []
+            received_delete: list[DeleteUser] = []
+
+            @bus.handler
+            async def handle_create(cmd: CreateUser) -> None:
+                received_create.append(cmd)
+
+            @bus.handler
+            async def handle_delete(cmd: DeleteUser) -> None:
+                received_delete.append(cmd)
+
+            async def send_and_close() -> None:
+                await anyio.sleep(0.01)
+                await bus.send(CreateUser(user_id=1, name="Test"))
+                await bus.send(DeleteUser(user_id=1))
+                await anyio.sleep(0.05)
+                await bus.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(bus.run)
+                    tg.start_soon(send_and_close)
+
+            # Factory should have been called for each handler
+            expected_handlers = {"handle_create", "handle_delete"}
+            assert set(created_subscribers) == expected_handlers
+
+    async def test_validation_requires_subscriber_or_factory(self) -> None:
+        """Test that either subscriber or subscriber_factory is required."""
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+
+            with pytest.raises(ValueError, match="Must provide either"):
+                CommandBus(pubsub, marshaler=marshaler)
+
+
+class TestCommandBusGenerateTopic:
+    """Tests for generate_topic custom topic generation."""
+
+    async def test_generate_topic_overrides_default(self) -> None:
+        """Test that generate_topic callback overrides default naming."""
+        async with InMemoryPubSub() as pubsub:
+            marshaler = PydanticMarshaler()
+            generated_topics: list[str] = []
+
+            def custom_topic_gen(command_name: str) -> str:
+                topic = f"custom.{command_name.lower()}"
+                generated_topics.append(topic)
+                return topic
+
+            bus = CommandBus(
+                pubsub,
+                pubsub,
+                marshaler=marshaler,
+                generate_topic=custom_topic_gen,
+            )
+            received: list[CreateUser] = []
+
+            @bus.handler
+            async def handle_create(cmd: CreateUser) -> None:
+                received.append(cmd)
+
+            async def send_and_close() -> None:
+                await anyio.sleep(0.01)
+                await bus.send(CreateUser(user_id=1, name="Test"))
+                await anyio.sleep(0.02)
+                await bus.close()
+
+            with anyio.fail_after(TIMEOUT_SECONDS):
+                async with anyio.create_task_group() as tg:
+                    tg.start_soon(bus.run)
+                    tg.start_soon(send_and_close)
+
+            # Custom topic generator should have been used
+            assert "custom.createuser" in generated_topics
+            assert len(received) == 1
