@@ -1,6 +1,6 @@
 [project]
 name = "natricine-conformance"
-version = "0.1.0"
+version = "0.2.0"
 description = "Conformance test suite for natricine pub/sub implementations"
 requires-python = ">=3.11"
 dependencies = ["natricine", "pytest>=8.0", "pytest-anyio>=0.0.0", "anyio>=4.0"]
