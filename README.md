@@ -10,6 +10,7 @@ pip install natricine
 # Backends
 pip install natricine-redisstream    # Redis Streams
 pip install natricine-aws            # AWS SNS/SQS
+pip install natricine-kafka          # Apache Kafka
 pip install natricine-sql            # PostgreSQL/SQLite
 pip install natricine-http           # HTTP webhooks
 pip install natricine_otel           # OpenTelemetry tracing/metrics
@@ -74,6 +75,7 @@ natricine                     # Core package
 
 natricine_redis               # pip install natricine-redisstream
 natricine_aws                 # pip install natricine-aws
+natricine_kafka               # pip install natricine-kafka
 natricine_sql                 # pip install natricine-sql
 natricine_http                # pip install natricine-http
 natricine_otel                # pip install natricine_otel
@@ -115,6 +117,18 @@ subscriber = SQSSubscriber(session)
 # SNS fan-out to SQS
 sns_publisher = SNSPublisher(session)
 sns_subscriber = SNSSubscriber(session, config=SNSConfig(consumer_group="my-group"))
+```
+
+### Apache Kafka
+
+```python
+from natricine_kafka import KafkaPublisher, KafkaSubscriber, ProducerConfig, ConsumerConfig
+
+publisher = KafkaPublisher(ProducerConfig(bootstrap_servers="localhost:9092"))
+subscriber = KafkaSubscriber(ConsumerConfig(
+    bootstrap_servers="localhost:9092",
+    group_id="my-app",
+))
 ```
 
 ## Middleware

@@ -1,0 +1,28 @@
+[project]
+name = "natricine-kafka"
+version = "0.1.0"
+description = "Kafka backend for natricine"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["natricine", "aiokafka>=0.10"]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-anyio", "testcontainers[kafka]"]
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "natricine_kafka"
+
+[tool.uv.sources]
+natricine-conformance = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "natricine-conformance",
+    "pytest>=9.0.2",
+    "pytest-anyio>=0.0.0",
+    "testcontainers>=4.13.3",
+]
