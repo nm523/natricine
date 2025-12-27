@@ -4,7 +4,7 @@
 
 A port of [watermill](https://github.com/ThreeDotsLabs/watermill) (Go) to Python, built with modern async patterns and type safety.
 
-**Current version:** `{{ natricine_version }}` | [llms.txt](llms.txt)](https://nm523.github.io/natricine/llms.txt) | [llms-full.txt](llms-full.txt)](https://nm523.github.io/natricine/llms-full.txt)
+**Current version:** `{{ natricine_version }}` | [llms.txt](llms.txt)(https://nm523.github.io/natricine/llms.txt) | [llms-full.txt](llms-full.txt)(https://nm523.github.io/natricine/llms-full.txt)
 
 ## Features
 
